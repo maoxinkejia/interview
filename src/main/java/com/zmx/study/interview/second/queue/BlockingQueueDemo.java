@@ -1,9 +1,8 @@
 package com.zmx.study.interview.second.queue;
 
-import javafx.scene.effect.Bloom;
-
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class BlockingQueueDemo {
     public static void main(String[] args) throws Exception {
@@ -12,7 +11,26 @@ public class BlockingQueueDemo {
     }
 
     /**
-     *
+     * 设置超时时间，若超出时间则自动退出，若未超出时间，则阻塞等待
+     */
+    private static void offerAndPollByTime(BlockingQueue<String> blockingQueue) throws InterruptedException {
+        System.out.println(blockingQueue.peek());
+
+        System.out.println(blockingQueue.offer("a", 2, TimeUnit.SECONDS));
+        System.out.println(blockingQueue.offer("b", 2, TimeUnit.SECONDS));
+        System.out.println(blockingQueue.offer("c", 2, TimeUnit.SECONDS));
+        System.out.println(blockingQueue.offer("x", 2, TimeUnit.SECONDS));
+
+        System.out.println(blockingQueue.peek());
+
+        System.out.println(blockingQueue.poll(2, TimeUnit.SECONDS));
+        System.out.println(blockingQueue.poll(2, TimeUnit.SECONDS));
+        System.out.println(blockingQueue.poll(2, TimeUnit.SECONDS));
+        System.out.println(blockingQueue.poll(2, TimeUnit.SECONDS));
+    }
+
+    /**
+     * put/take 当队列满或空时，再执行put/take操作时会一直阻塞生产线程，知道成功或响应中断退出
      */
     private static void putAndTake(BlockingQueue<String> blockingQueue) throws InterruptedException {
         blockingQueue.put("a");

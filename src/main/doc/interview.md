@@ -133,12 +133,35 @@
 - 共享锁：指该锁可被多个线程持有，对ReentrantReadWriteLock其读锁就是共享锁，其写锁就是独占锁。读锁的共享锁可保证
 并发读是非常高效的，读写，写读，写写的过程都是互斥的。
     
+##### synchronized和Lock的区别
+- 原始构成
+    - synchronized是关键字属于JVM层面
+        - monitorenter（底层通过monitor对象来完成，其实wait/nofity等方法也依赖于monitor对象，只有在同步块或方法中
+        才能调用wait/notify等方法）
+        - monitorenter
+    - Lock是具体类(java.util.concurrent.locks.Lock)是api层面的锁
+    
+- 使用方法
+    - synchronized不需要用户去手动释放锁，当sync代码执行完后系统会自动让线程释放对锁的占用
+    - ReentrantLock则需要用户去手动释放锁，若没有主动释放锁，就有可能导致出现死锁现象。
+        需要lock()和unlock()方法配合try/finally语句块来完成
+
+- 等待是否可中断
+    - sync不可中断，除非抛出异常或者正常运行完成
+    - ReentrantLock可中断
+        - 设置超时方法tryLock(long timeout, TimeUnit unit)
+        - lockInterruptibly()放代码块中，调用interrupt()方法可中断
+
+- 锁绑定多个条件Condition
+    - sync没有
+    - ReentrantLock用来实现分组唤醒需要唤醒的线程们，可以精确唤醒，而不是像sync要么随机唤醒一个线程，要么唤醒全部线程
+    
     
 #### CountDownLatch/CyclicBarrier/Semaphore
 - CountDownLatch
     - CountDownLatch通过AQS（AbstractQueuedSynchronizer）里面的共享锁来实现的。ReentrantLock也是使用AQS
     - 使用场景： 举个例子，有三个工人在为老板干活，这个老板有一个习惯，就是当三个工人把一天的活都干完了的时候，
-    他就来检查所有工人所干的活。记住这个条件：三个工人先全部干完活，老板才检查。
+        他就来检查所有工人所干的活。记住这个条件：三个工人先全部干完活，老板才检查。
     
 - CyclicBarrier
     - 可循环使用的屏障。集齐七颗龙珠就能召唤神龙。
@@ -159,11 +182,23 @@
 ##### 架构设计
 - BlockingQueue implements Queue implements Collection
 ##### 实现类
-- ArrayBlockingQueue：由数组结构组成的有界阻塞队列
-- LinkedBlockingQueue：由链表结构组成的有界（但大小默认值为Integer.MAX_VALUE）阻塞队列
-- SynchronousQueue：不存储原色的阻塞队列，也即单个元素的队列
+- **ArrayBlockingQueue：由数组结构组成的有界阻塞队列**
+- **LinkedBlockingQueue：由链表结构组成的有界（但大小默认值为Integer.MAX_VALUE）阻塞队列**
+- **SynchronousQueue：不存储原色的阻塞队列，也即单个元素的队列**
 
 - PriorityBlockingQueue：支持优先级排序的无解阻塞队列
 - DelayQueue：使用优先级队列实现的延迟无界阻塞队列
 - LinkedTransferQueue：由链表结构组成的无界阻塞队列
 - LinkedBlockingDeQue：由链表结构组成的双向阻塞队列
+
+#### 线程池
+##### 线程池的优势
+```
+线程池做的工作主要是控制运行的线程数量，处理过程中将任务放入队列，然后再线程创建后启动这些任务，如果线程数量超过了
+最大数量超出数量的线程会排队等候，等其他线程执行完毕，再从队列中取出任务来执行。
+**他的主要特点为：线程复用；控制最大并发数；管理线程。**
+```
+- 第一：降低资源消耗。通过重复利用已创建的线程降低线程创建和销毁造成的消耗。
+- 第二：提高响应速度。当任务到达时，任务可以不需要等现线程创建就能立即执行。
+- 第三：提高线程的可管理性。线程是稀缺资源，如果无限制创建，不仅会消耗系统资源，还会降低系统的稳定性，使用线程池
+    可以进行统一的分配，调优和监控
