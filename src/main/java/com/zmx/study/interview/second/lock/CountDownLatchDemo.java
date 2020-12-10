@@ -18,7 +18,7 @@ public class CountDownLatchDemo {
 //                    if (b) {
 //                    }
                     System.out.println(Thread.currentThread().getName() + "\t 抢到车位");
-                    TimeUnit.SECONDS.sleep(2);
+                    TimeUnit.SECONDS.sleep(10);
                     System.out.println(Thread.currentThread().getName() + "\t 离开车位。。");
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -26,6 +26,7 @@ public class CountDownLatchDemo {
                     semaphore.release();
                 }
             }, String.valueOf(i)).start();
+            TimeUnit.SECONDS.sleep(1);
         }
     }
 

@@ -106,7 +106,7 @@
 #### 公平锁/非公平锁/可重入锁/递归锁/自旋锁
 ##### 公平锁和非公平锁
 - 是很么？
-    - 公平锁：指多个县城按照申请锁的顺序来获取锁，先来后到。
+    - 公平锁：指多个线程按照申请锁的顺序来获取锁，先来后到。
     - 非公平锁：指多个线程获取锁的顺序不是按照申请锁的顺序，在高并发的情况下，有可能会造成优先级反转或者饥饿现象。
 - 两者区别
     - ReentrantLock的构建函数可以指定boolean类型来得到公平锁或非公平锁，默认为非公平锁
@@ -176,15 +176,15 @@
     - 当阻塞队列是空时，从队列中获取元素的操作将会被阻塞
     - 当阻塞队列是满时，往队列里添加元素的操作将会被阻塞
 ##### 为什么用？有什么好处？
-- 在多线程领域，所谓阻塞，在某些情况下会挂起线程（即阻塞），一但条件满足，被挂起的线程又会自动被环形
+- 在多线程领域，所谓阻塞，在某些情况下会挂起线程（即阻塞），一但条件满足，被挂起的线程又会自动被唤醒
 - 为什么需要BlockingQueue？好处是我们不需要关心什么时候需要阻塞线程，什么时候需要唤醒线程，因为这一切BlockingQueue都包办了
-- 在JUC发布以前，在多线程环境下，每个程序员都必须自己控制这些细节，尤其还要兼顾效率和线程安全，负责度直线上升
+- 在JUC发布以前，在多线程环境下，每个程序员都必须自己控制这些细节，尤其还要兼顾效率和线程安全，复杂度直线上升
 ##### 架构设计
 - BlockingQueue implements Queue implements Collection
 ##### 实现类
 - **ArrayBlockingQueue：由数组结构组成的有界阻塞队列**
 - **LinkedBlockingQueue：由链表结构组成的有界（但大小默认值为Integer.MAX_VALUE）阻塞队列**
-- **SynchronousQueue：不存储原色的阻塞队列，也即单个元素的队列**
+- **SynchronousQueue：不存储元素的阻塞队列，也即单个元素的队列**
 
 - PriorityBlockingQueue：支持优先级排序的无解阻塞队列
 - DelayQueue：使用优先级队列实现的延迟无界阻塞队列
@@ -202,3 +202,106 @@
 - 第二：提高响应速度。当任务到达时，任务可以不需要等现线程创建就能立即执行。
 - 第三：提高线程的可管理性。线程是稀缺资源，如果无限制创建，不仅会消耗系统资源，还会降低系统的稳定性，使用线程池
     可以进行统一的分配，调优和监控
+    
+##### 线程池的重要参数
+- corePoolSize 线程池的常驻核心线程数
+- maximumPoolSize 线程池能够容纳同时执行的最大线程数
+- keepAliveTime 多余的空闲线程存活时间，若现有线程数大于corePoolSize时，根据存活时间，将超时的空闲线程进行销毁，
+    直到只剩下corePoolSize为止
+- unit keepAliveTime的单位
+- workQueue 任务队列，被提交但尚未被执行的任务存储在此队列
+- threadFactory 生成线程池中工作线程的工厂，一般使用默认即可
+- handler 拒绝策略，当队列满了并且持续有任务提交时，拒绝处理的策略
+
+##### 线程池工作原理
+- 在创建了线程池后，等待提交过来的任务请求。
+- 当调用了execute()方法添加一个请求任务时，线程会做如下判断
+    - 如果正在运行的线程数量小于corePoolSize，那么马上创建线程运行这个任务
+    - 如果正在运行的线程数量大于或等于corePoolSize,那么将这个任务放入队列
+    - 如果这时候队列满了，且正在运行的线程数量还小于maximumPoolSize，那么还是要创建非核心线程立刻运行这个任务
+    - 如果队列满了且正在运行的线程数量大于或等于maximumPoolSize，那么线程池会启动饱和和拒绝策略来执行
+- 当一个县城完成任务时，它会从队列中取下一个任务来执行
+- 当一个线程无事可做超过一定时间(keepAliveTime)时，线程池会判断
+    - 如果当前运行的线程数大于corePoolSize，那么这个线程就会被停掉
+    - 所有线程池的所有任务完成后，它最终会收缩到corePoolSize的大小
+    
+##### 线程池拒绝策略
+- AbortPolicy(默认) 直接抛出RejectedExecutionException异常阻止系统正常运行
+- CallerRunsPolicy 调用者运行的一种机制，该策略既不会抛弃任务，也不会抛出异常，而是将某些任务回退到调用者，
+    从而降低新任务的流量(主线程自己执行)
+- DiscardOldestPolicy 抛弃队列中等待最久的任务，然后把当前任务加入队列中尝试再次提交当前任务
+- DiscardPolicy 直接丢弃任务，不予任何处理也不抛出异常。如果允许任务丢失，这是最好的一种办法
+
+##### 线程池配置策略
+- cpu密集型
+    - Runtime.getRuntime().availableProcessors()获取CPU核数，一般公式： cpu核数 + 1 个线程的线程池
+- io密集型
+    - 参考公式： CPU核数 / (1 - 阻塞系数)  阻塞系数在0.8-0.9之间
+    - 比如：8核CPU  8/ (1 - 0.9) = 80个线程数
+    
+#### 死锁
+- jstack pid
+
+---
+
+## JVM && GC
+#### JVM垃圾回收时如何确定垃圾？是否知道什么是GC Roots？
+- 什么是垃圾？
+    - 内存中已经不再被使用到的空间就是垃圾
+- 如何判断一个对象是否可以被回收
+    - 枚举根节点做可达性分析(跟搜索路径)
+    ```
+    为了解决引用计数法的循环引用问题，Java使用了可达性分析的方法  **跟踪(Tracing)**
+    所谓"GC Roots"或者说Tracing GC的"根集合"就是一组必须活跃的引用。
+    基本思路就是通过一系列名为"GC Roots"的对象作为起始点，从这个被称为GC Roots 的对象开始向下搜索，如果一个对象到GC Roots没有
+    任何引用链相连时，则说明此对象不可用。也即给定一个集合的引用作为根出发，通过引用关系遍历对象图，能被遍历到的(可到达的)对象
+    就被判定为存活，没有被遍历到的就自然被判定为死亡。
+    ```
+- Java中可以作为GC Roots的对象
+    - 虚拟机栈(栈帧中的局部变量区，也叫作局部变量表)中引用的对象
+    - 方法区中的类静态属性引用的对象
+    - 方法去中常量引用的对象
+    - 本地方法栈中JNI(Native方法)引用的对象
+
+#### 如何配置JVM参数调优，有哪些JVM系统默认值
+- JVM参数类型
+    - 标配参数 （-version -help....）
+    - X参数(了解)
+        - -Xint:解释执行
+        - -Xcomp:第一次使用就编译成本地代码
+        - -Xmixed:混合模式
+
+    - XX参数(重要)
+        - Boolean类型
+            - -XX:+/-某个属性值，+:代表开启，-:代表关闭
+            - case： -XX:+PrintGCDetails
+        - KV设值类型
+            - 公式:  -XX:key=value
+            - case:  -XX:MetaspaceSize=128m
+        - jinfo -flag key pid
+        - jinfo -flags pid
+- 盘点家底查看JVM默认值
+    - java -XX:+PrintFlagsInitial  JVM初始默认参数
+    - java -XX:+PrintFlagsFinal [-version || -XX:MetaspaceSize=512m]   JVM调整过后参数
+    - =是初始参数， :=是修改后的参数
+    - java -XX:+PrintCommandLineFlags -version
+
+#### 平时常用的基本参数配置有哪些
+- -Xms 等价于 -XX:InitialHeapSize 默认为物理内存的1/64
+- -Xmx 等价于 -XX:MaxHeapSize 默认为物理内存的1/4
+- -Xss 等价于 -XX:ThreadStackSize 设置单个线程栈的大小，一般默认为512~1024k
+    - jinfo -flag ThreadStackSize -->> 系统默认0，但等价于1024k(官网给出)
+- -Xmn 设置年轻代大小
+- -XX:MetaspaceSize 设置元空间大小
+    - 元空间的本质和永久代类似，都是对JVM规范中方法区的实现。不过元空间与永久代之间最大的区别在于：元空间并
+        不在虚拟机中，而是使用本地内存。因此默认情况下，元空间的大小仅受本地内存限制。
+    - -Xmx10m -Xmx10m -XX:MetaspaceSize=1024m -XX:+PrintFlagsFinal
+- -XX:+PrintGCDetails 打印GC详情
+- -XX:SurvivorRatio 幸存区比例 默认8:1:1
+    - case: -XX:SurvivorRatio=4  4:1:1
+- -XX:NewRatio 
+- -XX:MaxTenuringThreshold
+
+
+#### 强引用、弱引用、软引用、虚引用
+
