@@ -262,6 +262,11 @@
     - 方法区中的类静态属性引用的对象
     - 方法去中常量引用的对象
     - 本地方法栈中JNI(Native方法)引用的对象
+- GC算法：
+    - 引用计数
+    - 复制
+    - 标记清除
+    - 标记压缩
 
 #### 如何配置JVM参数调优，有哪些JVM系统默认值
 - JVM参数类型
@@ -299,9 +304,98 @@
 - -XX:+PrintGCDetails 打印GC详情
 - -XX:SurvivorRatio 幸存区比例 默认8:1:1
     - case: -XX:SurvivorRatio=4  4:1:1
-- -XX:NewRatio 
-- -XX:MaxTenuringThreshold
+- -XX:NewRatio 年轻代老年代比例，默认2，即1:2
+    - case: -XX:NewRatio=4  即新生代占1，老年代占4  1:4
+    - case: -XX:NewRatio=2  即新生代占1，老年代占2  1:2
+- -XX:MaxTenuringThreshold 查看默认进入老年代年龄
+    - case: -XX:MaxTenuringThreshold=0 若设置成0，则年轻代对象不经过Survivor区，直接进入老年代。对于老年代比较多的应用，可以提高效率
+    - 默认15，设置区间在0-15之间
 
 
 #### 强引用、弱引用、软引用、虚引用
+##### 强引用
+- 当内存不足，JVM开始垃圾回收，对于强引用对的对象，就算是出现了OOM也不会对该对象进行回收
+- 强引用是我们最常见的普通对象引用，只要还有强引用指向一个对象，就能表明对象还活着，垃圾收集器不会碰这种对象。在Java中最常见的
+    就是强引用，把一个对象赋给一个引用变量，这个引用变量就是一个强引用。当一个对象被强引用变量引用时，它处于可达状态，它是不可能
+    被垃圾回收机制回收的，即使该对象以后永远不会被用到JVM也不会回收。因此强引用是造成Java内存泄漏的主要原因之一。    
+- 对于一个普通的对象，如果没有其他的引用关系，只要超过了引用的作用域，或者显式地将相应（强）引用赋值为null，一般认为就是可以被
+    垃圾收集的了
+##### 软引用
+- 软引用是一种相对强引用弱化了一些的引用，需要用java.lang.ref.SoftReference类来实现，可以让对象豁免一些垃圾收集
+- 对于只有软引用的对象来说
+    - 当系统内存充足时，不会被回收
+    - 当系统内存不足时，会被回收
+- 软引用通常用在对内存敏感的程序中，比如高速缓存就有用到软引用，内存够用的时候就留，不够用就回收
+##### 弱引用
+- 弱引用需要用java.lang.ref.WeakReference类来实现，它比软引用的生存期更短
+- 对于只有弱引用的对象来说，只要垃圾回收机制一运行，不管JVM的内存空间是否足够，都会回收该对象占用的内存
+- 软引用和弱引用的适用场景
+    - 假如应用需要读取大量的本地图片
+        - 如果每次读取图片都从硬盘读取则会严重影响性能
+        - 如果一次性全部加载到内存中又可能造成内存溢出
+    - 此时使用软引用可以解决这个问题
+    - 设计思路是：用一个HashMap来保存图片的路径和相应图片对象关联的软引用之间的映射关系，在内存不足时，JVM会自动回收这些缓存图片对象
+        所占用的空间，从而有效的避免了OOM的问题
+    - Map<String, SoftReference<Bitmap>> imageCache = new HashMap<String, SoftReference<Bitmap>>();
+##### 虚引用
+- 虚引用需要java.lang.ref.PhantomReference类来实现
+- 顾名思义，就是形同虚设，与其他几种引用都不同，虚引用并不会决定对象的生命周期。如果一个对象仅持有虚引用，那么他就和没有任何引用一样，
+    在任何时候都可能被垃圾回收器回收，它不能单独使用也不能通过它访问对象，虚引用必须和引用队列(ReferenceQueue)联合使用。
+- 主要作用就是确保对象被finalize以后，做某些事情的机制，在垃圾收集器将对象从内存中清除出去之前做必要的清理工作。
 
+#### OOM
+##### java.lang.StackOverFlowError
+##### java.lang.OutOfMemoryError:Java heap space
+##### java.lang.OutOfMemoryError:GC overhead limit exceeded
+- GC回收时间过长时会抛出此异常，过长的定义是，超过98%的时间用来做GC并且回收了不到2%的堆内存，连续多次GC都只回收了不到2%的极端情况下才会抛出。
+- 假如不抛出GC overhead limit exceeded错误会发生什么情况呢？那就是GC清理的那么点内存会很快再次填满，迫使GC再次执行，这样就形成恶性循环，
+    CPU使用率一直是100%，而GC却没有任何成果
+##### java.lang.OutOfMemoryError:Direct buffer memory
+- 写NIO程序经常使用ByteBuffer来读取或者写入数据，这是一种基于通道(Channel)与缓冲区(Buffer)的I/O方式，他可以使用Native函数库直接分配堆外
+    内存，然后通过一个存储在Java堆里面的DirectByteBuffer对象作业这块内存的引用进行操作。这样能在一些场景中显著提高性能，避免了再Java堆
+    和Native堆中来回复制数据。
+    - ByteBuffer.allocate(capability) 分配JVM堆内存，属于GC管辖范围，由于需要拷贝所以相对速度较慢
+    - ByteBuffer.allocateDirect(capability) 分配OS本地内存，不属于GC管辖范围，由于不需要内存拷贝所以速度相对较快。
+- 但如果不断分配本地内存，堆内存很少使用，那么JVM就不需要执行GC，DirectByteBuffer对象们就不会被回收，这时候堆内存充足，但本地内存可能
+    已经是用光了，再次尝试分配本地内存就会出现OutOfMemoryError。
+##### java.lang.OutOfMemoryError:unable to create new native thread
+- 导致原因：
+    - 应用创建了太多线程，超过了系统承载极限
+    - linux系统默认允单个进程可以创建的线程数是1024个(非root用户，root用户没有限制)
+- 解决办法：
+    - 分析应用是否真的需要创建那么多线程，若不需要则修改程序减少线程数
+    - 修改linux配置调优 /etc/security/limits.d/90-nproc.conf
+##### java.lang.OutOfMemoryError:Metaspace
+
+#### 垃圾回收算法和垃圾回收器的关系
+- GC算法是内存回收的方法论，垃圾收集器就是算法落地实现
+- 4种主要垃圾收集器
+    - Serial串行垃圾回收器
+        - 它为单线程环境设计且只使用一个线程进行垃圾回收，会暂停所有的用户线程。不适用于服务器环境。
+    - Parallel并行垃圾回收器
+        - 多个垃圾收集线程并行工作，此时用户线程是暂停的，适用于科学计算/大数据处理首台处理等弱交互场景
+        - 优化case: java -Xmx3800m -Xms3800m -Xmn2g -Xss128k -XX:+UseParallelGC -XX:ParallelGCThreads=20 -XX:+UseParallelOldGC MaxGCPauseMillis=100 -XX:MaxGCPauseMillis=100
+    - CMS并发垃圾回收器
+        - 用户线程和垃圾收集线程同时执行(不一定是并行，可能交替执行)，不需要停顿用户线程，互联网公司多用它，适用对响应时间有要求的场景
+        - 优化case: java -Xmx3550m -Xms3550m -Xmn2g -Xss128k-XX:ParallelGCThreads=20  -XX:+UseConcMarkSweepGC -XX:+UseParNewGC  -XX:CMSFullGCsBeforeCompaction=5 -XX:+UseCMSCompactAtFullCollection
+    - G1垃圾回收器
+        - 将堆内存分割成不同的区域然后并发的对其进行垃圾回收
+        - 优化case: java -Xmx12m -Xms3m -Xmn1m -XX:PermSize=20m -XX:MaxPermSize=20m -XX:+UseSerialGC -jar java-application.jar
+
+#### 怎么查看服务器默认垃圾收集器？生产上如何配置垃圾收集器？谈谈对垃圾收集器的理解
+##### java的gc回收的类型主要有：
+- UseSerialGC
+- UseParallelGC
+- UseConcMarkSweepGC
+- UseParNewGC
+- UseParallelOldGC
+- UseG1GC
+##### 垃圾收集器
+- 部分参数预先说明
+    - DefNew -->> Default New Generation
+    - Tenured -->> Old
+    - ParNew -->> Parallel New Generation
+    - PSYoungGen -->> Parallel Scavenge
+    - ParOldGen -->> Parallel Old Generation
+
+#### G1垃圾收集器
