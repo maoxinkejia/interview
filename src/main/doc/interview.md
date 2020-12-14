@@ -62,7 +62,7 @@
     - UnSafe类
     ```
     1.Unsafe 是CAS的核心类，由于Java方法无法直接访问底层系统，需要通过本地（native）方法来访问，Unsafe相当于一个后门，
-      基于该类可以直接操作特定内存的数据。Unsafe类存在于sun.misc包中，起内部方法操作可以像C的指针一样直接操作内存，因为
+      基于该类可以直接操作特定内存的数据。Unsafe类存在于sun.misc包中，其内部方法操作可以像C的指针一样直接操作内存，因为
       Java中CAS操作的执行依赖于Unsafe类的方法。
     *- Unsafe类中的所有方法都是native修饰的，也就是说，Unsafe类中的方法都直接调用操作系统底层资源执行相应任务。
     2.变量valueOffset，表示该变量值在内存中的偏移地址，因为Unsafe就是根据内存偏移地址获取数据的。
@@ -114,7 +114,7 @@
     就占有锁，否则就会加入到等待队列中，以后会按照FIFO的规则从队列中取到自己。
     - 非公平锁：比较粗鲁，上来就直接尝试占有锁，如果尝试失败，就再才用类似公平锁那种方式。
 - 题外话
-    - 非公平锁的优点在于吞吐量比公平锁打
+    - 非公平锁的优点在于吞吐量比公平锁大
     - synchronized也是一种非公平锁
     
 ##### 可重入锁（又名递归锁）
@@ -314,7 +314,7 @@
 
 #### 强引用、弱引用、软引用、虚引用
 ##### 强引用
-- 当内存不足，JVM开始垃圾回收，对于强引用对的对象，就算是出现了OOM也不会对该对象进行回收
+- 当内存不足，JVM开始垃圾回收，对于强引用的对象，就算是出现了OOM也不会对该对象进行回收
 - 强引用是我们最常见的普通对象引用，只要还有强引用指向一个对象，就能表明对象还活着，垃圾收集器不会碰这种对象。在Java中最常见的
     就是强引用，把一个对象赋给一个引用变量，这个引用变量就是一个强引用。当一个对象被强引用变量引用时，它处于可达状态，它是不可能
     被垃圾回收机制回收的，即使该对象以后永远不会被用到JVM也不会回收。因此强引用是造成Java内存泄漏的主要原因之一。    
@@ -352,7 +352,7 @@
     CPU使用率一直是100%，而GC却没有任何成果
 ##### java.lang.OutOfMemoryError:Direct buffer memory
 - 写NIO程序经常使用ByteBuffer来读取或者写入数据，这是一种基于通道(Channel)与缓冲区(Buffer)的I/O方式，他可以使用Native函数库直接分配堆外
-    内存，然后通过一个存储在Java堆里面的DirectByteBuffer对象作业这块内存的引用进行操作。这样能在一些场景中显著提高性能，避免了再Java堆
+    内存，然后通过一个存储在Java堆里面的DirectByteBuffer对象作业这块内存的引用进行操作。这样能在一些场景中显著提高性能，避免了在Java堆
     和Native堆中来回复制数据。
     - ByteBuffer.allocate(capability) 分配JVM堆内存，属于GC管辖范围，由于需要拷贝所以相对速度较慢
     - ByteBuffer.allocateDirect(capability) 分配OS本地内存，不属于GC管辖范围，由于不需要内存拷贝所以速度相对较快。
@@ -374,7 +374,7 @@
         - 它为单线程环境设计且只使用一个线程进行垃圾回收，会暂停所有的用户线程。不适用于服务器环境。
     - Parallel并行垃圾回收器
         - 多个垃圾收集线程并行工作，此时用户线程是暂停的，适用于科学计算/大数据处理首台处理等弱交互场景
-        - 优化case: java -Xmx3800m -Xms3800m -Xmn2g -Xss128k -XX:+UseParallelGC -XX:ParallelGCThreads=20 -XX:+UseParallelOldGC MaxGCPauseMillis=100 -XX:MaxGCPauseMillis=100
+        - 优化case: java -Xmx3G -Xms3G -XX:+UseParallelGC -XX:ParallelGCThreads=20 -XX:+UseParallelOldGC -XX:MaxGCPauseMillis=100
     - CMS并发垃圾回收器
         - 用户线程和垃圾收集线程同时执行(不一定是并行，可能交替执行)，不需要停顿用户线程，互联网公司多用它，适用对响应时间有要求的场景
         - 优化case: java -Xmx3550m -Xms3550m -Xmn2g -Xss128k-XX:ParallelGCThreads=20  -XX:+UseConcMarkSweepGC -XX:+UseParNewGC  -XX:CMSFullGCsBeforeCompaction=5 -XX:+UseCMSCompactAtFullCollection
@@ -397,5 +397,26 @@
     - ParNew -->> Parallel New Generation
     - PSYoungGen -->> Parallel Scavenge
     - ParOldGen -->> Parallel Old Generation
+- 新生代
+    - 串行GC(Serial/Serial Copying)
+        ```
+            串行收集器是最古老，最稳定以及效率最高的收集器，只使用一个线程去回收但其再进行垃圾收集过程中可能会产生较长的停顿(STW)。虽然
+        在垃圾收集过程中需要暂停所有其他的工作线程，但是它简单高效，对于限定单个CPU来说没有线程交互的开销可以获得最高的单线程垃圾收集
+        效率，因此Serial垃圾收集器依然是Java虚拟机运行在Client模式下默认的新生代垃圾收集器。
+        ```
+        - 参数： -XX:+UseSerialGC
+            - 开启后会使用Serial(Young区用) + Serial Old(Old区用)的收集器组合
+            - -Xms10m -Xmx10m -XX:+PrintGCDetails -XX:+UseSerialGC
+    - 并行GC(ParNew)
+        ```
+        1.使用多线程进行垃圾回收，会STW暂停其它所有工作线程直到它收集结束。
+        2.ParNew收集器其实就是Serial收集器新生代的并行多线程版本，最常见的应用场景是配合老年代的CMS GC工作，其余的行为和Serial收集器完全
+            一样，ParNew在垃圾收集过程中同样也要暂停所有其他的工作线程。它是很多java虚拟机运行在Server模式下新生代的默认垃圾收集器。
+        ```
+        - 参数： -XX:+UseParNewGC (启动此收集器时，只影响新生代的收集，不影响老年代)
+            - 开启后会使用ParNew + Serial Old的组合模式，但java8已经不再被推荐
+            - -Xms10m -Xmx10m -XX:+PrintGCDetails -XX:+UseParNewGC
+    - 并行回收GC(Parallel/Parallel Scavenge)
+
 
 #### G1垃圾收集器
