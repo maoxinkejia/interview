@@ -1,4 +1,4 @@
-# 面试-高级
+# 面试第二季
 
 ## JUC多线程及高并发
 #### volatile的理解
@@ -536,8 +536,7 @@
 - uptime 简易版查看load average参数
 - 按数字键1，查看各个cpu执行情况
 
-#### CPU
-##### vmstat
+##### CPU
 - vmstat -n 2 3
     - procs
         - r:运行和等待CPU时间片的进程数，原则上1核的CPU的运行队列不要超过2，整个系统的运行队列不能超过总核数的2倍，否则代表
@@ -550,12 +549,65 @@
         - id:系统处于空间的CPU百分比
         - wa:系统等待IO的CPU时间百分比
         - st:来自于一个虚拟机偷取的CPU时间百分比
+- mpstat -P ALL 2
+    - 打印出所有cpu进程的消耗
+- pidstat -u 1 -p pid
+    - 指定pid，查看当前进程的cpu使用率
 
-#### 内存
+##### 内存
+- free -m -s 2
+- pidstat -p pid -r 2
 
-#### 硬盘
+##### 硬盘
+- df -h
+-du * -sh
 
-#### 网络I/O
+##### 网络I/O
+- iostat -xdk 2 3
+    - rkB/s 每秒读取数据量kb
+    - wkB/s 每秒写入数据量kb
+    - svctm I/O请求的平均服务时间，单位毫秒
+    - await I/O请求的平均等待时间，单位毫秒，值越小性能越好
+    - util 一秒钟有百分之几的时间用于I/O操作，接近100%时，表示磁盘带宽跑满，需要优化程序或者增加磁盘
+    ```
+    1.rkB/s、wkB/s根据系统应用不同会有不同的值，但有规律遵循：长期、超大数据读写，肯定不正常
+    2.svctm的值与await的值很接近，表示几乎没有I/O等待，磁盘性能好
+    3.如果await的值远高于svctm的值，表示I/O队列等待太长，需要优化程序或更换更快磁盘
+    ```
+- pidstat -d 2 -p pid
 
-#### 磁盘I/O
+##### 磁盘I/O
+- ifstat
 
+
+#### 生产环境cpu过高分析
+- ps -mp pid -o THREAD,tid,time
+    - -m 显示所有的线程
+    - -p pid进程使用cpu的时间
+    - -o 该参数后是用户自定义格式
+- 将线程号转换为16进制(英文小写格式) printf "%x\n" 或 计算器
+- jstack pid |grep tid -A60
+
+
+## GitHub
+#### in关键字
+- xxx in:name 项目名中包含xxx的
+- xxx in:description 项目描述中包含xxx的
+- xxx in:readme 项目中readme文件中包含xxx的
+- 组合使用 xxx in:name,readme,description
+
+#### stars或fork数量关键字
+- xxx stars:> 1000 或者  xxx stars:>= 1000
+- xxx forks:> 500 或者 xxx forks:>= 500
+- 100..200 在100-200之间
+- 组合使用： springboot forks:2000..4000 stars 6000..8000
+
+#### awesome关键字
+- awesome系列一般是用来收集学习、工具、书籍类相关的项目
+
+#### 高亮显示
+- 地址 + #L13-L23
+    - 例： https://github.com/maoxinkejia/interview/blob/main/src/main/java/com/zmx/study/interview/second/lock/ReentrantLockDemo.java#L7-L24
+
+#### github之快捷键
+https://docs.github.com/en/free-pro-team@latest/github/getting-started-with-github/keyboard-shortcuts
