@@ -11,6 +11,10 @@ public class LockSupportDemo {
     private static Condition condition = lock.newCondition();
 
     public static void main(String[] args) {
+        lockAwaitSignal();
+    }
+
+    private static void parkUnpark() {
         Thread a = new Thread(() -> {
             System.out.println(Thread.currentThread().getName() + "\t ===========come in");
             LockSupport.park();
