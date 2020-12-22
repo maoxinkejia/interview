@@ -53,7 +53,7 @@ public class LockSupportDemo {
             } finally {
                 lock.unlock();
             }
-        }, "A").start();
+        }, "B").start();
     }
 
     private static void synchronizedWaitNotify() {
