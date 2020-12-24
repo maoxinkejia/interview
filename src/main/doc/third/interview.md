@@ -137,6 +137,38 @@ park会消费permit，也就是将1变成0，同事park立即返回。如果再�
 - @AfterReturning
 - @AfterThrowing
 - @Around
-            
-    
+##### spring4，aop通知顺序
+- 正常顺序
+    ```
+    1.环绕通知之前
+    2.before
+    3.方法
+    4.环绕通知之后
+    5.after
+    6.afterReturning
+    ```
+- 异常时顺序
+    ```
+    1.环绕通知之前
+    2.before
+    3.after
+    4.afterThrowing
+    ```
+##### spring5，aop通知顺序
+- 正常顺序
+    ```
+    1.环绕通知之前
+    2.before
+    3.方法
+    4.afterReturning
+    5.after
+    6.环绕通知之后
+    ```
+- 异常顺序
+    ```
+    1.环绕通知之前
+    2.before
+    3.afterThrowing
+    4.after
+    ```
         
