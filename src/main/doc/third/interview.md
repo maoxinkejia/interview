@@ -172,3 +172,44 @@ park会消费permit，也就是将1变成0，同事park立即返回。如果再�
     4.after
     ```
         
+##### 切点表达式
+**execution(public int  com.zmx.study.interview.third.spring.aop.CalServiceImpl.*(..))**
+
+#### 循环依赖
+- 问题：
+    - spring中的三级缓存分别是什么？三个Map有什么不同？
+    - Spring容器是什么？
+    - 什么是循环依赖？如何检测是否存在循环依赖？
+    - 开发中是否见到过循环依赖的异常？多例情况下，循环依赖问题为什么无法解决？
+    
+##### 什么是循环依赖
+- 多个bean之间相互依赖，形成了一个闭环，比如A依赖于B，B依赖于C，C依赖于A
+    - A @Autowired B
+    - B @Autowired C
+    - C @Autowired A
+- 通常来说，如果问spring容器内部如何解决循环依赖，一定是指默认的单例Bean中，属性相互引用的场景。
+##### 两种注入方式对循环依赖的影响
+- 构造器注入
+    - 官方解释：无法解决此问题，会形成俄罗斯套娃，一层套一层
+- set方法注入
+    - 官方推荐使用
+- 结论
+    - AB循环依赖问题只要A的注入方式是setter且singleton，就不会有循环依赖问题
+
+##### BeanCurrentlyCreationException
+- spring容器在默认的单例(singleton)的场景是支持循环依赖的，不报错
+- 若为prototype时则是不支持循环依赖的，会报错
+
+##### DefaultSingletonBeanRegistry类，实现了三级缓存，解决循环依赖的问题
+- 第一级缓存(也叫单例池)singletonObjects：存放已经经历了完整生命周期的Bean对象
+- 第二级缓存：earlySingletonObjects，存放早期暴露出来的Bean对象，Bean的生命周期未结束
+- 第三级缓存：singletonFactories，可以存放生成Bean的工厂
+
+- 只有单例的bean会通过三级缓存提前暴露来解决循环依赖的问题，而非单例的bean，每次从容器中获取都是一个新的对象，都会重新创建，
+    所以非单例的bean是没有缓存的，不会将其放到三级缓存中
+    
+##### 三级缓存
+- 实例化/初始化
+    - 实例化：内存中申请一块内存空间
+    - 初始化属性填充：完成属性的各种赋值3
+- 3个Map和四大方法
