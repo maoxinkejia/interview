@@ -213,3 +213,98 @@ park会消费permit，也就是将1变成0，同事park立即返回。如果再�
     - 实例化：内存中申请一块内存空间
     - 初始化属性填充：完成属性的各种赋值3
 - 3个Map和四大方法
+    - singletonObjects 一级缓存  ConcurrentHashMap<String, Object>
+    - earlySingletonObjects 二级缓存 HashMap<String, Object>
+    - singletonFactories 三级缓存 HashMap<String, ObjectFactory<?>>
+    - getSingleton
+    - doCreateBean
+    - populateBean
+    - addSingleton
+- 总结：
+    - A创建过程中需要B，于是A将自己放到三级缓存里面，去实例化B
+    - B实例化的时候发现需要A，于是B先查一级缓存，没有，再查二级缓存，还是没有，再查三级缓存，找到了A，然后把三级缓存里面的这个A
+        放到了二级缓存里面，并删除三级缓存里面的A
+    - B顺利初始化完毕，将自己放到一级缓存里面（此时B里面的A依然是创建中状态），然后回来接着创建A，此时B已经创建完成，直接从一级
+        缓存里面拿到B，然后完成创建，并将A自己放到一级缓存里面。
+        
+        
+## Redis
+#### 安装redis6.0.8
+##### 参考redis中/英文官网，redis有bug，需要升级至6.0.8版本
+
+#### 传统的5大数据类型
+##### redis八种数据类型
+- String
+    - 常用命令：
+        - set key value
+        - get key
+        - mset k1 v1 k2 v2 k3 v3
+        - mget k1 k2 k3
+        - incr key
+        - incrby key increment
+        - decr key
+        - decrby key decrement
+        - strlen key
+        - setnx key value
+        - set key value [ex seconds] [px milliseconds] [nx] [xx]
+            - ex: 多少秒后后期
+            - px：多少毫秒后过期
+            - nx：当key不存在的时候，才创建key，效果等同于setnx
+            - xx：当key存在的时候覆盖key
+- Hash
+    - hset key field value
+    - hget key field
+    - hmset key f1 v1 f2 v2
+    - hmget key f1 f2
+    - hgetall key
+    - hlen key
+    - 等等
+- List
+    - lpush k v
+    - rpush k v
+    - lrange k 0 -1
+    - llen key
+- Set
+    - sadd key v1 v2 v3 v4
+    - smembers key
+        - 获取集合中的所有元素
+    - srandmember key [count]
+        - 随机弹出多个元素，不删除该元素，count为弹出个数，不写为1个
+    - spop key [count]
+        - 随机弹出多个元素，但删除该元素，count为弹出个数，不写为1个
+    - scard key 
+        - 获取集合中的元素个数
+    - sinter k1 k2
+        - 两个集合取交集，相同点
+    - sdiff k1 k2
+        - 两个集合取差集，不同点
+    - sunion k1 k2
+        - 两个集合取并集，合并后的集合
+- SortedSet(ZSet)
+    - zadd key score value
+    - zrange key 0 -1
+        - 按照元素分数从小到大的顺序，返回索引从start到stop之间的所有元素
+    - zscrore key member
+        - 获取元素的分数
+    - zrem key member
+        - 删除元素
+    - zrangebyscore key min max withscores [limit offset count]
+        - 获取指定分数范围的元素
+    - zincrby key increment member
+        - 增加某个元素的分数
+    - zcard key
+        - 获取集合中元素的数量
+    - zcount key min max
+        - 获取指定分数范围内的元素个数
+    - zremrangebyrank key start stop
+        - 按照排名范围删除元素
+- Bitmap
+- HyperLogLog
+- GEO
+
+**在redis中可以使用： help @string 命令查看该数据类型对应的所有命令**
+
+#### 分布式锁
+##### redisson，官方推荐
+
+#### redis缓存过期淘汰策略
