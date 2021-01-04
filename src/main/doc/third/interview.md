@@ -308,3 +308,19 @@ park会消费permit，也就是将1变成0，同事park立即返回。如果再�
 ##### redisson，官方推荐
 
 #### redis缓存过期淘汰策略
+##### redis内存满了怎么办？
+- redis默认内存多少？在哪里查看？如何修改配置？
+    - redis.conf 中配置，如果不配置或配置为0，在64位操作系统中不限制内存大小，在32位操作系统中最多使用3G
+        - maxmemory
+        - 一般推荐redis设置的内存为最大物理内存的四分之三
+    - 通过命令查看
+        - 在进入redis后，通过config set maxmemory 104857600设置redis最大内存，单位byte
+        - 通过config get maxmemory查看当前redis设置的物理内存
+    - 通过info memory命令也可以进行查看（单独使用info可以查看所有redis客户端信息）
+- redis内存打满后
+    - OOM command not allowed when used memory异常报错
+
+##### redis缓存淘汰策略
+- 过期key是如何被删除的？是否一过期就自动被删除？
+    - 定时删除
+        - 
