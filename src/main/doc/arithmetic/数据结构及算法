@@ -1,0 +1,1774 @@
+# 数据结构
+
+## 2019-06-25
+## 1、总括
+  数据结构主要包括线性结构和非线性结构
+### 1.1线性结构
+##### 1.1.1线性结构的特点是数据元素之间存在一对一的线性关系
+##### 1.1.1线性结构有两种不同的存储结构：顺序存储结构（数组）和链式存储结构（链表）
+  顺序表中的存储元素是连续的，链表中存储元素不一定是连续的，元素中存放数据元素及相邻元素的地址信息
+##### 1.1.2线性结构常见的有：数组、队列、链表和栈
+### 1.2.非线性结构
+##### 1.2.1非线性结构包括：二位数组，多维数组，广义表，树结构，图结构
+
+## 2、稀疏数组
+### 2.1概述
+  当一个数组中大部分元素为0，或者为同一个值的数组时，可以使用稀疏数组来保存该数组（当记录很多没有意义的数据时使用稀疏数组）
+
+### 2.2处理方法
+  line1记录数组一共有几行、几列、有几个不同的值
+  line2 ——>> line n 记录每个不同值的位置
+
+```java
+class ParseArray{
+	public static void main(String[] args){
+		// 创建一个原始的二维数组 11 * 11
+		// 0:表示没有旗子， 1:表示黑子， 2:表示蓝子
+		int[][] chessArr1 = new int[11][11];
+		chessArr1[1][2] = 1;
+		chessArr1[2][3] = 2;
+		chessArr1[4][5] = 2;
+		// 输出原有二位数组
+		for(int[] row : chessArr1){
+			for(int col : row){
+				System.out.printf("%d\t", col);
+			}
+			System.out.println();
+		}
+		
+		// 将二维数组  转  稀疏数组的思路
+		// 1.先遍历二维数组  得到非0数据的个数
+		int sum = 0;
+		for(int[] row : chessArr1){
+			for(int col : row){
+				if(clo != 0){
+					sum++;
+				}
+			}
+		}
+		// 2.创建对应的稀疏数组
+		int[][] sparseArr = new int[sum + 1][3];
+		// 第一行记录二维数组有几行，几列，几个有效数字
+		sparseArr[0][0] = 11;
+		sparseArr[0][1] = 11;
+		sparseArr[0][2] = sum;
+		
+		// 3.遍历二维数组，将非0数据存放到稀疏数组中
+		int count = 0 // 用来递增记录第几个非0数据
+		for(int i = 0; i < 11; i++){
+			for(int j = 0; j < 11; j++){
+				if(chessArr1[i][j] != 0){
+					count++;
+					sparseArr[count][0] = i;
+					sparseArr[count][1] = j;
+					sparseArr[count][2] = chessArr1[i][j];
+				}
+			}
+		}
+		
+		// 遍历稀疏数组，看效果
+		for(int i = 0; i < sparseArr.length; i++){
+			System.out.printf("%d\t%d\t%d\t\n", sparseArr[i][0], sparseArr[i][1], sparseArr[i][2])；
+		}
+		
+		// 将稀疏数组转换成二维数组
+		int[][] chessArr2 = new int[sparseArr[0][0]][sparseArr[0][1]];
+		for(int i = 1; i < sparseArr.length; i++){
+			chessArr2[sparseArr[i][0]][sparseArr[i][1]] = sparseArr[i][2];
+		}
+	}
+}
+```
+### 2.3 问题：将存储的稀疏数组保存到本地，需要恢复时再将本地文件读取出来并恢复成二维数组？？？
+
+## 3、队列
+### 3.1概述
+  1.队列是一个有序列表，可以用数组或者链表来实现
+  2.遵循先入先出的原则
+### 3.2数组模拟队列
+  1.队列本身是有序列表，若使用数组来存储队列数据则maxSize为该队列的最大容量
+  2.需要使用front和rear分别标识队列前后端的下标
+  3.当添加队列时 rear+1 ，当出队时 front+1 当front == rear时 队列为空
+  4.当rear == maxSize - 1 时队列满，不可再添加
+```java
+class ArrayQueueDemo{
+	// 数组大小
+	private int maxSize;
+	// 头指针
+	private int front;
+	// 尾指针
+	private int rear;
+	// 用来存放数据的数组
+	private int[] arr;
+	
+	public ArrayQueueDemo(int maxSize){
+		this.maxSize = maxSize;
+		arr = new int[maxSize];
+		rear = -1;
+		front = -1;
+	}
+	
+	// 队列是否满
+	public boolean isFull(){
+		return rear == maxSize - 1;
+	}
+	
+	// 队列是否空
+	public boolean isEmpty(){
+		return rear == front;
+	}
+	
+	// 添加数据到队列
+	public void add(int num){
+		if(isFull()){
+			throw new Exception();
+		}
+		rear++;
+		arr[rear] = num;
+	}
+	
+	// 出队一个数据
+	public int get(){
+		if(isEmpty()){
+			throw new Exception();
+		}
+		front++;
+		return arr[front];
+	}
+	
+	// 显示所有
+	public void show(){
+		if(isEmpty()){
+			throw new Exception();
+		}
+		for(int i = 0; i < arr.length; i++){
+			System.out.printf("arr[%d] = %d\n", i, arr[i])
+		}
+	}
+	
+	// 显示队列头数据
+	public int head(){
+		if(isEmpty()){
+			throw new Exception();
+		}
+		return arr[front + 1];
+	}
+}
+```
+#### 3.2.1问题分析并优化
+  1.目前数组使用一次就不能用了，没有达到复用的效果
+  2.将这个数组使用算法，该进程一个环形的队列  取模%
+
+#### 3.2.2数组模拟环形队列
+  1.将数组看做一个环形的（通过取模的方式来实现）
+  2.尾索引的下一个为头索引时表示队列满，将队列容器空出一个作为约定 (rear + 1) % maxSize == front， 初始值： rear = 0   front = 0
+  3.rear == front 为空
+  4.当这样分析时，队列中的有效数据的个数为：(rear + maxSize - front) % maxSize	
+
+```java
+class CircleArrayQueueDemo{
+	// 数组大小
+	private int maxSize;
+	// 头指针，指向队列的第一个元素，初始值0
+	private int front;
+	// 尾指针，指向队列最后一个元素的后一个位置，相当于空出来一个位置，初始为0
+	private int rear;
+	// 用于存放数据的数组
+	private int[] arr;
+		
+	public CircleArrayQueueDemo(int maxSize){
+		this.maxSize = maxSize;
+		arr = new int[maxSize];
+	}
+
+	// 判断队列是否满
+	public boolean isFull(){
+		return (rear + 1) % maxSize == front;
+	}
+	
+	// 判断队列是否空
+	public boolean isEmpty(){
+		return rear == front;
+	}
+	
+	// 添加一个元素
+	public void add(int num){
+		if(isFull()){
+			throw new Exception();
+		}
+		arr[rear] = num;
+		rear = (rear + 1) % maxSize;
+	}
+	
+	// 取出一个元素
+	public int get(){
+		if(isEmpty()){
+			throw new Exception();
+		}
+		//1.先把当前front对应的值取出来
+		//2.front后移
+		//3.返回数据
+		int num = arr[front];
+		front = (front + 1) % maxSize; 
+		return num;
+	}
+	
+	// 有效数据的个数
+	public int size(){
+		return (rear + maxSize - front) % maxSize;
+	}
+	
+	// 显示队列所有数据
+	public void show(){
+		if(isEmpty()){
+			throw new Exception();
+		}
+		// 遍历数据时一定是从front开始，遍历个数是front+有效数据的个数
+		for(int i = front; i < front + size(); i++){
+			System.out.printf("arr[%d] = %d\n", i % maxSize, arr[i % maxSize]);
+		}
+	}
+	
+	// 显示队列头数据
+	public void head(){
+		if(isEmpty()){
+			throw new Exception();
+		}
+		return arr[front];
+	}
+}
+```
+## 4.链表
+### 4.1概述
+  1.链表是以节点的方式来存储的，是链式存储。
+  2.每个节点包含data域，next域：指向下一个节点。
+  3.链表的各个节点**不一定是连续存储的**。
+  4.链表分为带有头结点和没有头结点的链表，根据实际需求来确定。
+
+#### 4.1 单向链表实现
+##### 4.1.1 练习1
+  使用带head头的单向链表实现-->> 水浒英雄排行榜管理
+  1）完成对英雄人物的增删改查操作
+  2）不考虑排名，直接插入到链表中
+  3）按照排名插入到指定位置（如果有这个排名，则添加失败，给出提示信息）
+
+##### 4.1.2 练习2
+   考虑排名时的单向链表实现
+   1）首先找到新添加的节点的位置，通过辅助变量（指针），通过遍历来找到
+   2）新的节点.next = 原来的temp.next
+   3）再将temp.next = 新的节点
+
+##### 4.1.3 练习3
+   修改节点信息，根据no来修改，no不能改变（改变相当于添加）
+   1）先找到要修改的节点
+   2）temp.name = newHeroNode.name;  temp.nickName = newHeroNode.nickName;
+
+##### 4.1.2 练习4
+   删除节点
+   1）需要找到待删除节点的前一个节点temp
+   2）删除时只需要将temp.next = temp.next.next
+   3）被删除的节点将不会有其他指向指引，被GC回收
+
+```java
+class SingleLinkedListDemo{
+	public static void main(String[] args){
+		// 测试
+		HeroNode h1 = new HeroNode(1, "1", "1");
+		HeroNode h2 = new HeroNode(2, "2", "2");
+		HeroNode h3 = new HeroNode(3, "3", "3");
+		
+		SingleLinkedList s = new SingleLinkedList();
+		s.add(h1);
+		s.add(h2);
+		s.add(h3);
+		
+		s.addByOrder(h1);
+		s.addByOrder(h2);
+		s.addByOrder(h3);
+		s.list();
+	}
+}
+
+class SingleLinkedList{
+	// 先初始化一个头节点，头结点不要动，不存放具体数据
+	private HeroNode head = new HeroNode(0, "", "");
+	
+	public HeroNode getHead(){
+		return head;
+	}
+	
+	// 添加节点到单向链表
+	// 当不考虑编号顺序时
+	// 1.找到当前链表的最后一个节点
+	// 2.将最后这个节点的next 指向 新的节点
+	public void add(HeroNode heroNode){
+		// 因为头节点不能动，需要一个辅助变量来帮助完成
+		HeroNode temp = head;
+		// 遍历链表找到最后一个节点
+		while(true){
+			if(temp.next == null){
+				break;
+			}
+			// 没有找到时将temp后移，指向下一个节点
+			temp = temp.next;
+		}
+		// temp为最后一个节点，将新添加进来的节点存放到temp.next中
+		temp.next = heroNode;
+	}
+	
+	// 有序添加节点
+	public void addByOrder(HeroNode heroNode){
+		// 因为头结点不能动，仍然使用辅助变量来帮助找到添加的位置
+		// 因为是单向链表，我们找的temp是位于添加位置的前一个节点，否则插不去进去
+		HeroNode temp = head;
+		// 标识当前添加的编号是否已经存在，默认为false
+		boolean flag = false;
+		while(true){
+			if(temp.next == null){
+				break;
+			}
+			if(temp.next.no == heroNode.no){//当前编号已存在
+				flag = true;
+				break;
+			}else if(temp.nex.no > heroNode.no){// 找到需要存放的位置，在当前的temp后插入
+				break;
+			}
+			// 以上条件都不满足，后移，继续遍历查找
+			temp = temp.next;
+		}
+		
+		//找到temp
+		if(flag){// 当前编号已存在，不能添加
+			System.out.println(heroNode.no + "已存在");
+		}else{
+			heroNode.next = temp.next;
+			temp.next = heroNode;
+		}
+	}
+	
+	// 更新链表
+	public void update(HeorNode newHeroNode){
+		HeroNode temp = head.next;
+		if(temp == null){
+			System.out.println("节点空");
+			return;
+		}
+		boolean flag = false;
+		while(true){
+			// 这里第一次进来一定不为空，循环调用后可能为空
+			if(temp == null){
+				break;//已经找到链表的最后一个位置
+			}
+			if(temp.no == newHeroNode.no){
+				flag = true;
+				break;
+			}
+			temp = temp.next;
+		}
+		
+		// 找到需要修改的节点，进行修改
+		if(flag){
+			temp.name = newHeroNode.name;
+			temp.nickName = newHeroNode.nickName;
+		}else{
+			System.out.println("没有找到");
+		}
+	}
+	
+	// 删除节点
+	public void delete(int no){
+		HeroNode temp = head;
+		// 标识是否找到待删除节点
+		boolean flag = false;
+		
+		while(true){
+			if(temp.next == null){
+				break; // 已经遍历结束
+			}
+			
+			if(temp.next.no == no){
+				flag = true;// 找到了待删除节点的前一个节点
+				break;
+			}
+			
+			temp = temp.next;
+		}
+		
+		if(flag){
+			// 找到了，可以删除，指向要删除的下一个节点
+			temp.next = temp.next.next;
+		}else{
+			System.out.println("没有找到");
+		}
+	}
+	
+	// 显示链表
+	public void list(){
+		if(head.next == null){
+			System.out.println("链表为空");
+			return;
+		}
+		// 因为head不能动，需要辅助变量来遍历
+		HeroNode temp = head.next;
+		while(true){
+			// 判断链表是否已经到最后了
+			if(temp == null){
+				break;
+			}
+			// 输出节点信息，并将temp后移
+			System.out.println(temp);
+			temp = temp.next;
+		}
+	}
+}
+
+class HeroNode{
+	public int no;
+	public String name;
+	public String nickName;
+	// 指向下一个节点
+	public HeroNode next;
+	
+	public HeroNode(int no, String name, String nickName){
+		this.no = no;
+		this.name = name;
+		this.nickName = nickName;
+	}
+}
+```
+
+#### 4.2 单链表面试题
+##### 4.2.1 求单链表中有节点的个数
+```java
+	// 获取到单链表的节点的个数（如果是带头结点的，要求不统计头结点）
+	public static int getLength(HeroNode head){
+		if(head.next == null){
+			return 0;
+		}
+		
+		int length = 0;
+		HeroNode curr = head.next;
+		while(curr != null){
+			length++;
+			curr = curr.next;
+		}
+		return length;
+	}
+	
+	//调用getLength()方法，传入参数为头结点参数，调用SingleLinkedList类的getHead()方法，将头节点作为参数传入getLength()中。
+```
+##### 4.2.2 查找单链表中的倒数第k个节点【新浪面试题】
+   1）编写一个方法，接收head节点，同时接收一个index
+   2）index表示倒数第index个节点
+   3）先把链表从头到尾遍历一下，得到链表总长度（getLength()）
+   4）得到size后，从链表的第一个开始遍历，遍历（size - index）个，就可以得到
+   5）如果找到就返回，否则返回null
+```java
+	public static HeroNode findIndexNode(HeroNode head, int index){
+		// 链表为空，直接返回null
+		if(head.next == null){
+			return null;
+		}
+		
+		// 第一次遍历先获取链表的长度
+		int size = getLength(head);
+		// 做index数据校验
+		if(index <= 0 || index > size){
+			return null;
+		}
+		
+		// 定义辅助变量，拿到第一个节点
+		HeroNode curr = head.next;
+		// 第二次遍历找 size - index 位置   for()  while()
+		for(int i = 0, i < size - index, i++){
+			curr = curr.next;
+		}
+		return curr;
+	}
+```
+
+##### 4.2.3 单链表的反转【腾讯面试题，有点难度】
+   1）先定义一个节点reverseHead = new HeroNode();
+   2）从头到尾遍历原来的链表，每遍历一个节点，就将其取出，并放在新的链表reverseHead的最前端，并指向下一个节点
+   3）最后将原来的head.next = reverseHead.next
+```java
+	public static void reversetList(HeroNode head){
+		if(head.next == null || head.next.next == null){
+			// 链表为空，或链表只有一个节点无需反转
+			return;
+		}
+		
+		// 定义一个辅助的指针，帮助遍历原来的链表
+		HeroNode curr = head.next;
+		// 指向当前节点的下一个节点，如果不指向下一个节点，单链表会断掉
+		HeroNode next = null;
+		HeroNode reverseHead = new HeroNode();
+		
+		// 遍历原来的链表
+		// 从头到尾遍历原来的链表，每遍历一个节点，就将其取出，并放在新的链表reverseHead的最前端，并指向下一个节点
+		while(curr != null){
+			next = curr.next;//先暂时保存当前节点的下一个节点
+			// 将curr的下一个节点指向新链表的最前端
+			curr.next = reverseHead.next;
+			reverseHead.next= curr;
+			curr = next;// 让curr 后移
+		}
+		
+		// 将head.next 指向 reverseHead.next 实现单链表反转
+		head.next = reverseHead.next;
+	}
+```
+
+##### 4.2.4 从尾到头打印单链表【百度，要求方式1：反向遍历。方式2：stack栈】
+   1）逆序打印单链表
+   2）方式1：先将单链表进行反转操作，再遍历即可。但这样会破坏原链表结构，**不建议！**
+   3）**方式2**：利用栈这个数据结构，将各个节点压入到栈中，利用栈先进后出的特点，实现了逆序打印
+
+```java
+// 演示Stack的基本使用
+public class TestStack{
+	public static void main(String[] args){
+		Stack<String> stack = new Stack();
+		// 入栈
+		stack.add("111");
+		stack.add("222");
+		stack.add("333"); 
+		
+		// 出栈
+		while(stack.size() > 0){
+			System.out.println(stack.pop());
+		}
+	}
+}
+
+// 方式2 利用栈的结构实现逆序打印
+	public static void reversePrint(HeroNode head){
+		if(head.next == null){
+			return;
+		}
+		Stack<HeroNode> stack = new Stack<HeroNode>();
+		HeroNode curr = head.next;
+		
+		// 将链表的所有节点压入栈
+		while(curr != null){
+			stack.push(curr);
+			curr = curr.next;
+		}
+		
+		// 将栈中的节点进行打印
+		while(stack.size() > 0){
+			System.out.println(stack.pop());
+		}
+	}
+```
+
+##### 4.2.5 合并两个有序的单链表，合并之后的链表依然有序【课后练习】
+
+
+#### 4.3 双向链表
+##### 4.3.1 概述
+   管理单向链表的缺点分析：
+   1）单向链表，查找的方向是能是一个方向，而双向链表可以向前或者向后查找。
+   2）单向链表不能自我删除，需要靠辅助接点，而双向链表可以自我删除，所以我们前面单链表删除节点时总是找到temp（temp是待删除节点的前一个节点）
+
+   分析双向链表的遍历，添加，修改，删除的思路：
+   1）遍历：和单链表一样，只是可以向前，也可以向后查找
+   2）添加（默认添加到双向链表的最后）
+   （1）先找到双向链表的最后这个节点
+   （2）temp.next = newHeroNode
+   （3）newHeroNode.pre = temp;
+   3）修改思路和原理同单向链表一样
+   4）删除
+   （1）因为是双向链表，因此可以实现自我删除某个节点
+   （2）直接找到要删除的这个节点，比如temp
+   （3）temp.pre.next = temp.next
+   （4）temp.next.pre = temp.pre
+
+```java
+public class DoubleLinkedListDemo{
+	// 测试  add update delete 
+	
+}
+
+class DoubleLinkedList{
+	// 先初始化一个头结点，头结点不要动，不存放具体的数据
+	private HeroNode2 head = new HeroNode2(0, "", "");
+	// 返回头结点
+	public HeroNode2 getHead(){
+		return head;
+	}
+	
+	// 有序添加
+	// TODO
+	
+	// 添加
+	public void add(HeroNode2 heroNode){
+		// 因为头节点不能动，需要一个辅助变量来帮助完成
+		HeroNode2 temp = head;
+		// 遍历链表找到最后一个节点
+		while(true){
+			if(temp.next == null){
+				break;
+			}
+			// 没有找到时将temp后移，指向下一个节点
+			temp = temp.next;
+		}
+		// temp为最后一个节点，这样就形成了一个双向链表
+		temp.next = heroNode;
+		hreoNode.pre = temp;
+	}
+	
+	// 修改一个节点的内容，可以看到双向链表的节点的修改方法与单向链表的修改方法一样
+	public void update(HeorNode2 newHeroNode){
+		HeroNode2 temp = head.next;
+		if(temp == null){
+			System.out.println("节点空");
+			return;
+		}
+		boolean flag = false;
+		while(true){
+			// 这里第一次进来一定不为空，循环调用后可能为空
+			if(temp == null){
+				break;//已经找到链表的最后一个位置
+			}
+			if(temp.no == newHeroNode.no){
+				flag = true;
+				break;
+			}
+			temp = temp.next;
+		}
+		
+		// 找到需要修改的节点，进行修改
+		if(flag){
+			temp.name = newHeroNode.name;
+			temp.nickName = newHeroNode.nickName;
+		}else{
+			System.out.println("没有找到");
+		}
+	}
+	
+	// 删除一个节点
+	// 1.对于双向链表，我们可以直接找到要删除的这个节点
+	// 2.找到后，自我删除即可
+	public void delete(int no){
+		// 判空
+		if(head.next == null){
+			System.out.println("空，无法删除");
+			return;
+		}
+		
+		// 直接找到要删除的节点即可，无需找它前一个节点
+		HeroNode2 temp = head.next;
+		// 标识是否找到待删除节点
+		boolean flag = false;
+		
+		while(true){
+			if(temp == null){
+				break; // 已经遍历结束
+			}
+			
+			if(temp.no == no){
+				flag = true;// 找到了待删除节点的前一个节点
+				break;
+			}
+			
+			temp = temp.next;
+		}
+		
+		if(flag){
+			// 找到了，可以删除，指向要删除的下一个节点
+			// 单向链表删除方式temp.next = temp.next.next;
+			temp.pre.next = temp.next;
+			// 这里如果temp已经是最后一个节点时，temp.next会出现空指针
+			if(temp.next != null){
+				temp.next.pre = temp.pre;
+			}
+		}else{
+			System.out.println("没有找到");
+		}
+	}
+	
+	// 显示链表
+	public void list(){
+		if(head.next == null){
+			System.out.println("链表为空");
+			return;
+		}
+		// 因为head不能动，需要辅助变量来遍历
+		HeroNode2 temp = head.next;
+		while(true){
+			// 判断链表是否已经到最后了
+			if(temp == null){
+				break;
+			}
+			// 输出节点信息，并将temp后移
+			System.out.println(temp);
+			temp = temp.next;
+		}
+	}
+}
+class HeroNode2{
+	public int no;
+	public String name;
+	public String nickName;
+	// 指向下一个节点,默认为null
+	public HeroNode2 next;
+	// 指向前一个节点，默认为null
+	public HeroNode2 pre;
+	
+	public HeroNode2(int no, String name, String nickName){
+		this.no = no;
+		this.name = name;
+		this.nickName = nickName;
+	}
+}
+```
+
+#### 4.4 单向环形链表
+##### 4.4.1 约瑟夫问题
+
+![](C:\Users\w_zhangmaoxin\Desktop\笔记\插图\Snipaste_2019-07-05_09-14-00.png)
+
+##### 4.4.2 构建一个单向环形链表的思路
+	根据用户的输入，生成一个小孩出圈的顺序
+	n = 5, 有5个人
+	k = 1, 从第1个人开始报数
+	m = 2, 数2下
+
+   1.先创建第一个节点，让first指向该节点，并形成环形
+   2.后面我们每创建爱你一个新的节点时，就把该节点加入到已有的环形链表中即可
+
+   遍历环形链表
+   1.先让一个辅助指针，指向first节点
+   2.然后通过一个while循环遍历该环形链表即可  当curr.next == first 结束
+
+##### 4.4.3 报数出圈
+   思路
+   1.创建一个辅助指针 helper，事先应该指向环形链表的最后这个节点
+   2.小孩报数前，需要先让first和helper移动k - 1次
+   3.当小孩报数时，让first和helper指针同时移动 m - 1 次
+   4.这是就可以将节点出圈
+       first = first.next
+       helper.next = first
+       原来的first指向的节点没有引用就会被回收
+
+##### 4.4.4 代码
+```java
+public class Josepfu{
+	// 测试  构建环形链表   遍历
+	
+}
+
+// 创建一个环形的单向链表
+class CircleSingleLinkedList{
+	// 创建一个first节点，当前没有编号
+	private Boy first = new Boy(-1);
+	
+	// 添加小孩，构建成一个环形链表
+	public void addBoy(int nums){
+		// nums 表示要添加多少个小孩 
+		if(nums < 1){
+			System.out.println("nums不正确")；
+			return;
+		}
+		
+		// 辅助指针，帮助构建环形链表
+		Boy curr = null;
+		// 使用循环来创建环形链表
+		for(int i = 1; i <= nums; i++){
+			// 根据编号，创建小孩节点
+			Boy boy = new Boy(i);
+			// 如果是第一个小孩
+			if(i == 1){
+				first = boy;
+				first.next = first;// 构成环装
+				curr = first; // 让curr指向第一个小孩 
+			} else {
+				curr.next = boy;// 将curr（第一次时curr为first节点，第二次时curr为第二个节点）的next节点，指向新添加的boy节点，
+				boy.next = first;// 将boy.next （新添加节点的下一个指向头结点，形成环）
+				curr = boy;// 将辅助节点后移，便于下次再添加
+			}
+		}
+	}
+	
+	// 遍历当前环形链表
+	public void showBoys(){
+		if(first == null){
+			System.out.println("kong");
+			return;
+		}
+		
+		// first不能动，用辅助指针遍历
+		Boy cuyrr = first;
+		while(true){
+			System.out.printf("小孩的的编号%d \n", curr.no);
+			if(curr.next == first){
+				break;// 已经遍历完毕
+			}
+			
+			curr = curr.next;// 后移指针
+		}
+	}
+    
+	/**
+	* 根据用户的输入，计算出小孩出圈的顺序
+	* @param startNo 表示从第几个小孩开始数数
+	* @param countNum 表示数记下
+	* @param nums 表示最初有几个小孩在圈中
+	*/
+	public void countBoy(int startNo, int countNum, int nums){
+		if(first == null || startNo < 1 || startNo > nums){
+			System.out.println("参数错误");
+			return;
+		}
+
+		// 创建辅助指针
+		Boy helper = first;
+		// 需求创建一个辅助指针helper, 实现应该指向环形链表的最后这个节点
+		while(true){
+			if(helper.next == first){
+				break;
+			}
+			helper = helper.next;
+		}
+		
+		// 小孩报数前，先让first和helper移动 k - 1 次（从第几个小孩开始数数）
+		for(int j = 0; j < startNo - 1; j++){
+			first = first.next;
+			helper = helper.next;
+		}
+		
+		// 当小孩报数时，让first和helper指针同时的移动m - 1 次，然后出圈
+		// 循环出圈，直到圈中只有一个节点（数的是几）
+		while(true){
+			if(helper == first){
+				break; // 说明圈中只剩一个节点了
+			}
+			
+			// 让first和helper 指针同时移动 countNum - 1
+			for(int j = 0; j < countNum - 1; j++){
+				first = first.next;
+				helper = helper.next;
+			}
+			
+			// 这时 first指向的节点，就是要出圈的小孩节点
+			System.out.printf("小孩%d出圈\n", first.no);
+			// 出圈
+			first = first.next;
+			helper.next = first;
+		}
+		
+		System.out.println("最后留在圈中的小孩的编号%d \n", first.no);
+	}
+}
+
+// 创建一个Boy类，表示一个节点
+class Boy{
+	public int no;
+	public Boy next; // 指向下一个节点，默认null
+	
+	public Boy(int no){
+		this.no = no;
+	}
+}
+```
+
+## 5 栈
+### 5.1 栈的介绍
+   1）stack
+   2）栈是一个**先入后出**的有序列表
+   3）stack是限制线性表中元素的插入和删除只能在线性表的同一端进行的一种特殊线性表。允许插入和删除的一端，为**变化的一端，称为栈顶**（Top），另一端为**固定的一端，称为栈底**（Bottom）
+   4）根据栈的定义可知，最先放入栈中的元素在栈底，最后放入的元素在栈顶，而删除元素则相反，最后放入的元素最先删除，最先放入的元素最后删除
+   5）入栈push ， 出栈pop
+
+### 5.2 数组模拟栈的思路分析
+   实现栈的思路分析
+   1）使用数组来模拟栈
+   2）定义一个top来表示栈顶，初始为-1
+   3）入栈操作，当有数据加入到栈时，top++ ； stack[top] = data;
+   4）出栈操作，int value = stack[top]; top-- , return value
+
+#### 5.2.1 代码实现
+```java
+public class ArrayStackDemo{
+	public static void main(String[] args){
+		// 测试
+		ArrayStack stack = new ArrayStack(4);
+		String key = "";
+		boolean loop = true;
+		Scanner s = new Scanner(System.in);
+		
+		while(loop){
+			// TODO....
+		}
+	}
+}
+
+class ArrayStack{
+	public int maxSize;// 栈的大小
+	public int[] stack;// 数组，模拟栈，数据存放在数组中
+	public int top = -1; // top表示栈顶，初始为-1
+	
+	public ArrayStack(int maxSize){
+		this.maxSize = maxSize;
+		stack = new int[this.maxSize];
+	}
+	
+	// 栈满
+	public boolean isFull(){
+		return top == maxSize -1;
+	}
+	
+	// 栈空
+	public boolean isEmpty(){
+		return top == -1;
+	}
+	
+	// 入栈
+	public void push(int value){
+		if(isFull){
+			throw new Exception();
+		}
+		
+		stack[top++] = value;
+	}
+	
+	// 出栈
+	public int pop(){
+		if(isEmpty()){
+			throw new Exception();
+		}
+		
+		return stack[top--];
+	}
+	
+	// 遍历  要从栈顶开始显示数据
+	public void list(){
+		if(isEmpty()){
+			throw new Exception();
+		}
+		
+		for(int i = top; i >= 0; i++){
+			System.out.printf("stack[%d] = %d\n", i, stack[i]);
+		}
+	}
+	
+	// 增加一个方法，可以返回当前栈顶的值，不是真正的pop
+	public int peek(){
+		return stack[pop];
+	}
+}
+```
+
+#### 5.2.2 练习 使用单链表实现栈的模拟
+
+
+### 5.3 使用栈完成计算一个表达式的结果
+   思路分析
+   1.通过一个index值来遍历我们的表达式
+   2.如果我们发现是一个数字就直接入栈
+   3.如果发现扫描的是一个符号，就分如下情况
+   3.1如果发现当前的符号栈为空，就直接入栈
+   3.2如果符号栈有操作符，就进行比较，如果当前**的操作符的优先级小于或者等于栈中的操作符**，就需要从数栈中pop出两个数，再从符号栈中pop出一个符号，进行运算，**将得到的结果入数栈，然后将当前的操作符入符号栈**，如果当前的**操作符的优先级大于符号栈中的操作符**，就直接入符号栈
+   4.当表达式扫描完毕，就顺序的从数栈和符号栈中pop出相应的数和符号，进行运算
+   5.最后在数栈中只有一个数字，就是表达式的结果
+
+#### 5.3.1 代码实现
+```java
+public class Calculator{
+	public static void main(String[] args){
+		String experssion = "3+2*6-2";
+		// 创建两个栈，数栈，符号栈
+		ArrayStack2 numStack = new ArrayStack2(10);
+		ArrayStack2 operStack = new ArrayStack2(10);
+		// 定义需要的相关变量
+		int index = 0;
+		int num1 = 0;
+		int num2 = 0;
+		int oper = 0;
+		int res = 0;
+		char ch = ' ';
+		String keepNum = "";
+		
+		// 循环的扫描表达式
+		while(true){
+			// 依次得到expression的每一个字符
+			ch = expression.substring(index, index + 1).charAt(0);
+			// 判断ch是什么，然后做相应的处理
+			if(operStack.isOper(ch)){// 如果是运算符
+				// 判断当前的符号栈是否为空
+				if(!operStack.isEmpty()){
+					// 比较符号优先级
+					if(operStack.priority(ch) <= operStack.priority(operStack.peak())){
+						num1 = numStack.pop();
+						num2 = numStack.pop();
+						oper = operStack.pop();
+						res = numStack.cal(num1, num2, oper);
+						numStack.push(res);
+						operStack.push(ch);
+					} else {
+						operStack.push(ch);
+					}
+				
+				} else {
+					// 如果为空直接入栈
+					operStack.push(ch);
+				}
+			} else {
+				// 如果是数，则直接入数栈
+				// ASCII表对应的char类型与真实的数字相差48
+				// numStack.push(ch - 48);  
+				/*
+					当数字为一位时 3+2*6-2  直接取3没问题，但当30+2*6-2时需要一次性拿2位数，否则运算错误
+					思路分析：
+					1.在处理数时，需要向expression的index后再看一位，如果是数就进行扫描，如果是符号才入栈
+					2.因此需要定义一个变量字符串，用于拼接
+				*/
+				
+				keepNum += ch;
+				// 判断下一个字符是不是数字，如果是数字就继续扫描，如果是运算符则入数栈
+				if(index == expression.length() -1){
+					numStack.push(Integer.parseInt(keepNum));
+				} else {
+					if(operStack.isoper(expression.substring(index + 1, index + 2).charAt(0))){
+						// 如果后一位是运算符，则入栈
+						numStack.push(Integer.parseInt(keepNum));
+						keepNum = "";
+					}
+				}
+			}
+			// 让index + 1， 并判断是否扫描到expression最后
+			index++;
+			if(index >= expression.length()){
+				break;
+			}
+			
+			// 表达式扫描完毕后，运行
+			while(true){
+				// 如果符号栈为空，则计算到最后的结果，数栈中只有一个数字（结果）
+				if(operStack.isEmpty()){
+					break;
+				}
+				num1 = numStack.pop();
+				num2 = numStack.pop();
+				oper = operStack.pop();
+				res = numStack.cal(num1, num2, oper);
+				numStack.push(res);
+			}
+			
+			System.out.println("最后的结果为：" + numStack.pop());
+		}
+	}
+}
+
+class ArrayStack2(){
+	// todo  xxxxx属性
+	// 符号的优先级
+	public int priority(int oper){
+		if(oper == '*' || oper == '/'){
+			return 1;
+		} else if (oper == '+' || oper == '-'){
+			return 0;
+		} else {
+			return -1;// 假定目前表达式只有 + - * / 
+		}
+	}
+	
+	// 判断是不是一个运算符
+	public boolean isOper(char val){
+		return val == '+' || val == '-' || val == '*' || val == '/';
+	}
+	
+	// 计算方法
+	public int cal(int num1, int num2, int oper){
+		int result = 0;
+		switch(oper){
+			case '+';
+				res = num1 + num2;
+				break;
+			case '-';
+				res = num2 - num2;// 注意顺序
+				break;
+			case '*';
+				res = num1 * num2;
+				break;
+			case '/';
+				res = num2 / num1;// 顺序
+				break;
+		}
+		
+		return res;
+	}
+}
+```
+
+### 5.4 前缀、中缀、后缀表达式（逆波兰表达式）
+
+#### 5.4.1 前缀表达式（波兰表达式）
+   1.前缀表达式的运算符位于操作数之前
+   2.举例说明 (3+4)x5-6 对应的前缀表达式就是 - x + 3 4 5 6
+   3.计算机计算时是从右至左进行扫描，先将数字压入栈内，遇到符号时弹出栈顶和次顶元素进行运算，将运算结果再压入栈内
+#### 5.4.2 中缀表达式
+   1.中缀表达式就是最常见的运算表达式
+   2.中缀表达式人最熟悉，但是计算机并不熟悉，不好运算
+#### 5.4.3 后缀表达式
+   1.后缀表达式与前缀表达式相似，只是运算符位于操作数之后
+   2.例如： (3+4)x5-6   --->>>   3 4 + 5 x 6 -
+   3.计算机处理时是从左到右扫描
+##### 5.4.3.1 逆波兰计算器
+   1.输入一个逆波兰表达式，使用栈计算其结果
+   2.支持小括号和多位数整数
+   3.思路分析
+   4.代码完成
+##### 5.4.3.2 代码
+```java
+public class PolandNotation{
+	public static void main(Stringp[] args){
+		// 先定义逆波兰表达式
+		// (3+4)x5-6 ===>> 3 4 + 5 x 6 -
+		String suffixExpression = "3 4 + 5 x 6 -";
+		// 思路
+		// 1.先将表达式放到ArrayList中
+		// 2.将ArrayList传给一个方法，遍历ArrayList 配合栈完成计算
+		List<String> list = getListString(suffixExpression);
+		System.out.println(list);
+	}
+	
+	// 将一个逆波兰表达式，一次将数据和运算符 放入到ArrayList中
+	public static List<String> getListString(String suffixExpression){
+		// 将suffixExpression 分隔
+		String[] split = suffixExpression.split(" ");
+		List<String> list = new ArrayList<>();
+		for(String s: split){
+			list.add(s);
+		}
+		return list;
+	}
+	
+	// 完成对逆波兰表达式的运算
+	public static int calculate(List<String> ls){
+		// 创建栈，只需要一个栈即可
+		Stack<String> stack = new Stack<String>();
+		// 遍历ls
+		for(String s: ls){
+			// 使用正则表达式取出数据
+			if(s.matches("\\d+")){// 匹配多位数
+				stack.push(item);
+			} else {
+				int num1 = Integer.parseInt(stack.pop());
+				int num2 = Integer.parseInt(stack.pop());
+				int res = 0;
+				switch(s){
+					case "+":
+						res = num1 + num2;
+						break;
+					case "-":
+						res = num2 - num1;
+						break;
+					case "*":
+						res = num1 * num2;
+						break;
+					case "/":
+						res = num2 / num1;
+						break;
+					default:
+						throw new Exception();
+				}
+				stack.push(String.valueOf(res));
+			}
+		}
+		// 将运算最后的结果返回
+		return Integer.parseInt(stack.pop());
+	}
+}
+```
+
+### 5.5 中缀表达式转换为后缀表达式
+   思路分析：
+   例：1 + ( ( 2 + 3 )  x 4 ) - 5 = 
+   1.初始化2个栈，运算符栈s1和存储中间结果的栈s2；
+   2.从左至右扫描中缀表达式；
+   3.遇到操作数时，将其压入s2；
+   4.遇到运算符时，比较其与s1栈顶运算符的优先级：
+   4.1如果s1为空，或栈顶运算符为左括号 " ( "，则直接将此运算符入栈；
+   4.2否则，若优先级比栈顶运算符的高，也将运算符压入s1；
+   4.3否则，将s1栈顶的运算符弹出并压入到s2中，再次转到（4.1）与s1中新的栈顶运算符相比较；
+   5.遇到括号时：
+   5.1如果是左括号 " ( "，则直接压入s1；
+   5.2如果是右括号 " ( "，则依次弹出s1栈顶的运算符，并压入s2，知道遇到左括号为止，此时将这一对括号丢弃；
+   6.重复步骤2至5，知道表达式最后边；
+   7.将s1中剩余的运算符依次弹出并压入s2；
+   8.依次弹出s2中的元素并输出，结果的逆序即为中缀表达式对应的后缀表达式。
+
+#### 5.5.1 代码实现
+```java
+public static void main(String[] args ){
+	/*
+		1.  1+((2+3)x4)-5 ===>>> 转成 1 2 3 + 4 x + 5
+		2.  因为直接对str进行操作不方便，因此先将 "1+((2+3)x4)-5"转换成对应的list，即 ArrayList[1,+,(,(,2,+,3,),x,4,),-,5]
+		3.  将得到的中缀表达式转成一个后缀表达式对应的list
+	*/
+	String expression = "1+((2+3)x4)-5";
+	List<String> list = toInfixExpression(expression);
+	System.out.println(list);
+	
+	List<String> parseSuffixExpression = parseSuffixExpression(list);
+	System.out.println("parseSuffixExpression");
+}
+
+// 方法：将中缀表达式转成对应的list
+// s="1+((2+3)x4)-5"
+public static List<String> toInfixExpression(String s){
+	// 定义一个List，存放中缀表达式对应的内容
+	List<String> ls = new ArrayList<>();
+	int i = 0;	// 指针，用来遍历中缀表达式字符串
+	String str;	// 对对位数的拼接
+	char c;//每遍历到一个字符，就放入到c
+	do{
+		// 如果c是一个非数字，就需要加入到ls中
+		if((c = s.charAt(i)) < 48 || (c = s.charAt(i)) > 57){
+			ls.add("" + c);
+			i++;
+		} else {
+			// 如果是一个数，需要考虑多位数
+			str = "";// 先将str置成空串
+			while(i < s.length() && (c = s.charAt(i)) >= 48 && (c = s.charAt(i)) <= 57){
+				str += c;//拼接数字
+				i++;
+			}
+			ls.add(str);
+		}
+	}while(i < s.length());
+	
+	return ls;
+}
+
+public static List<String> parseSuffixExpressionList(List<String> ls){
+	// 定义两个栈
+	Stack<String> s1 = new Stack<String>();// 符号栈
+	// 因为s2这个栈在整个过程中没有pop操作，而且最后还需要逆序输出，比较麻烦，所以可以直接使用ArrayList处理
+	List<String> s2 = new ArrayList<>();// 存储中间结果的list
+	
+	for(String s : ls){
+		// 如果是一个数，加入到s2
+		if(s.matches("\\d+")){
+			s2.add(item);
+		}else if(s.equals("(")){
+			s1.push(s);
+		} else if(s.equals(")")){
+			while(!s1.peak().equals("(")){
+				s2.add(s1.pop());
+			}
+			s1.pop();// 将 ( 弹出s1
+		} else {
+			// 当s 的优先级小于或等于s1栈顶运算符，将s1栈顶的运算符弹出并加入到s2中，再次转到(4.1)与s1中新栈顶运算符比较
+			// 缺少一个比较优先级高低的方法
+			while(s1.size() != 0 && Operation.getValue(s1.peak()) >= Operation.getValue(s)){
+				s2.add(s1.pop());
+			}
+			// 还需要将s 压入栈中
+			s1.push(s);
+		}
+	}
+	
+	// 将s1中剩余的运算符一次加入到s2中
+	while(s1.size() != 0){
+		s2.add(s1.pop());
+	}
+	
+	return s2;//直接按顺序输出即可，为逆波兰表达式
+}
+
+// 增加一个类：Operation，用来返回一个运算符对应的优先级
+class Operation {
+	private static int ADD = 1;
+	private static int SUB = 1;
+	private static int MUL = 2;
+	private static int DIV = 2;
+	
+	public static int getValue(String operation){
+		int result = 0;
+		switch (operation){
+			case "+":
+				result = ADD;
+				break;
+			case "-":
+				result = SUB;
+				break;
+			case "*":
+				result = MUL;
+				break;
+			case "/":
+				result = DIV;
+				break;
+			default:
+				throw new Exception();
+		}
+	}
+}
+```
+
+## 6 递归
+
+### 6.1 递归的应用场景：迷宫问题，八皇后问题
+### 6.2 递归的概念
+   递归就是方法自己调用自己，每次调用传入不同的变量，递归有助于编程者解决复杂的问题，同时可以让代码变得简洁
+### 6.3 递归调用机制：
+   1.打印问题
+   2.阶乘问题
+   3.使用示意图的方式
+   1）当程序执行到一个方法时，就会开辟一个独立的空间（栈）
+   2）每个空间的数据（局部变量），是独立的
+### 6.4 递归能解决什么样的问题
+   1）各种数据问题：8皇后、汉诺塔、阶乘问题、迷宫问题....
+   2）各种算法：快排、归并排序、二分查找、分治算法等
+   3）将用栈解决问题，递归代码比较简洁
+
+### 6.5 递归需要遵守的重要规则
+   1.执行一个方法时，就创建一个新的受保护的独立空间（栈空间）
+   2.方法的局部变量是独立的，不会相互影响，比如n变量
+   3.方法中使用的是引用类型变量（比如数组），就会共享该引用类型的数据
+   4.递归必须向退出递归的条件逼近，否则就是无限递归，出现StackOverflowError。死循环
+   5.当一个方法执行完毕，或者遇到return，就会返回，遵守谁调用就将结果返回给谁，同是当方法执行完毕或者返回时，该方法也就执行完毕
+
+### 6.6 迷宫问题
+##### 6.6.1 迷宫问题代码实现
+```java
+public class MiGong {
+	public static void main(Stringp[] args){
+		// 创建一个二维数组，模拟迷宫
+		int[][] map = new int[8][8];
+		// 使用1表示墙，上下全部置为1
+		for(int i = 0, i < 7; i++) {
+			map[0][i] = 1;
+			map[7][i] = 1;
+		}
+		
+		// 左右全部置为1
+		for(int i = 0; i < 8; i++){
+			map[i][0] = 1;
+			map[i][6] = 1;
+		}
+		// 设置额外挡板
+		map[3][1] = 1;
+		map[3][2] = 1;
+//		map[1][1] = 1;
+//		map[1][2] = 1;
+		
+		// 遍历地图
+		for(int i = 0; i < 8; i++) {
+			for(int j = 0; j < 7; j++){
+				System.out.print(map[i][j] + "");
+			}
+			System.out.println();
+		}
+		
+		// 递归回溯给小球找路
+		setWay(map, 1, 1);
+		setWay2(map, 1, 1);
+		
+		// 输出新地图，看小球走过的路
+		System.out.println("小球走过，并表示过的地图的情况");
+		for(int i = 0; i < 8; i++){
+			for(int j = 0, i < 7; j++){
+				System.out.print(map[i][j] + " ");
+			}
+			System.out.println();
+		}
+	}
+	
+	/**
+	 * 1.使用递归来给小球找路
+	 * 2.i,j表示从哪个位置开始出发，如果找到路就返回true，如果找不到就返回false
+	 * 3.如果小球能找到map[6][5]的位置，则说明通路找到
+	 * 4.约定：当map[i][j] = 0 时表示该点没有走过，当为1表示墙，2表示通路可以走，3表示该点已经走过，但是走不通
+	 * 在走迷宫时，需要确定一个策略（方法） 下 -->> 右 -->> 上 -->> 左，如果该点走不通再回溯
+	 */
+	public static boolean setWay(int[][] map, int i, int j){
+		if(map[6][5] == 2){// 通路已经找到
+			return true;
+		} else {
+			if(map[i][j] == 0){// 当前这个点还没有走过
+				// 按照策略走  下 -> 右 -> 上 -> 左
+				// 先假定该点可以走通
+				map[i][j] = 2;
+				if(setWay(map, i+1, j)){
+					return true;
+				} else if (setWay(map, i, j + 1)){// 向右走
+					return true;
+				} else if(setWay(map, i - 1, j)){// 往上走
+					return true;
+				}else if(setWay(map, i, j - 1)){// 往左走
+					return true;
+				}else{
+					// 说明该点是走不通的死路
+ 					map[i][j] = 3;
+					return false;
+				}
+			} else {
+				// 如果map[i][j] != 0 , 可能是1, 2, 3
+				return false;
+			}
+		}
+	}
+	
+	// 修改招录策略， 改成 上 -> 右 -> 下 -> 左
+	public static boolean setWay2(int[][] map, int i, int j){
+		if(map[6][5] == 2){// 通路已经找到
+			return true;
+		} else {
+			if(map[i][j] == 0){// 当前这个点还没有走过
+				// 按照策略走  下 -> 右 -> 上 -> 左
+				// 先假定该点可以走通
+				map[i][j] = 2;
+				if(setWay(map, i+1, j)){
+					return true;
+				} else if (setWay(map, i, j + 1)){// 向右走
+					return true;
+				} else if(setWay(map, i - 1, j)){// 往上走
+					return true;
+				}else if(setWay(map, i, j - 1)){// 往左走
+					return true;
+				}else{
+					// 说明该点是走不通的死路
+ 					map[i][j] = 3;
+					return false;
+				}
+			} else {
+				// 如果map[i][j] != 0 , 可能是1, 2, 3
+				return false;
+			}
+		}
+	}
+}
+```
+
+##### 6.6.2 迷宫问题的讨论
+   1.小球得到的路径和设置的找路策略有关
+   2.在得到小球路径时，可以先试用（下右上左），再改成（上右下左），看看路径是不是有变化
+   3.测试回溯现象
+   4.思考：如何求出最短路径
+
+### 6.7 八皇后问题
+##### 6.7.1 思路分析
+   1.第一个皇后先放到第一行第一列
+   2.第二个皇后放到第二行第一列、然后判断是否OK，如果不OK则继续放在第二列、第三列、依次把所有列都放完，找到合适的地方
+   3.继续第三个皇后，还是第一列、第二列......直到第八个皇后也能放在一个不冲突的位置，算是找到一个正确的解法
+   4.当得到一个正解时，在栈回退到上一个栈时，就会开始回溯，即将第一个皇后，放到第一列的所有正解全部得到
+   5.然后回头继续第一个皇后放第二列，后面继续循环执行1,2,3,4的步骤
+   说明：理论上应该创建一个二维数组来表示棋盘，但是实际上可以通过算法用一个一位数组即可解决问题。arr[8] = {0,4,7,5,2,6,1,3}。// 对应arr下标表示第几行，arr[i] = val，val表示第i+1个皇后，放在第i+1行的第val+1列。
+
+##### 6.7.2代码实现
+```java
+public class Queue8{
+	
+	// 定义一个max表示有多少个皇后
+	int max = 8;
+	// 定义数组，保存皇后放置的结果
+	int[] arr = new int[max];
+	static int count = 0;
+	public static void main(String[] args){
+		Queue8 queue8 = new Queue8();
+		queue8.check(9);
+		System.out.println(count);
+	}
+	
+	// 编写一个方法，放置第n个皇后
+	private void check(int n){
+		if(n == max){ // n从0开始，当n=8时说明放的是第9个皇后，直接return
+			print();
+			return;
+		}
+		
+		// 依次放入皇后，并判断是否冲突
+		for(int i = 0; i < max; i++){
+			// 先把当前这个皇后 n ，放到该行的第1列
+			arr[n] = i;
+			// 判断当放置第n个皇后到i列时，是否冲突
+			if(judge(n)){ // 说明不冲突
+				// 接着放n+1个皇后，开始递归
+				check(n + 1);
+			}
+			//如果冲突则继续执行循环，试下一个列的位置是否冲突
+		}
+	}
+	
+	// 查看当我们放置第n个皇后时，就去检测该皇后是否和前面已经摆放的皇后冲突
+	private boolean judeg(int n){
+		for(int i = 0; i < n; i++){
+			/*
+			 * 说明
+			 * 1.arr[i] == arr[n] 表示判断第n个皇后是否和前面的n-1个皇后在同一列
+			 * 2.第二个条件表示判断第n个皇后是否和第i个皇后在同一斜线 
+			 */
+			if(arr[i] == arr[n] || Math.abs(n-i) == Math.abs(arr[n] - arr[i])){
+			return false;
+			}
+		}
+		return true;
+	}
+	
+	// 写一个方法，可以将皇后摆放的位置输出
+	private void print(){
+		count++;
+		for(int i = 0; i < arr.length; i++){
+			System.out.print(arr[i] + " "); 
+		}
+		System.out.println();
+	}
+}
+```
+
+## 7 排序算法
+
+### 7.1 排序算法的介绍
+   排序也成排序算法，排序是将一组数据，按照指定的顺序进行排序的过程。
+### 7.2 排序的分类
+   1.内部排序：将需要处理的所有数据都加载到内部存储器（内存）中进行排序
+   2.外部排序：数据量过大时，无法全部加载到内存中，需要借助外部存储（文件等）进行排序
+   3.常见的排序算法分类：
+   1）插入排序：①直接插入排序 ②希尔排序
+   2）选择排序：①简单选择排序 ②堆排序
+   3）交换排序：①冒泡排序 ②快速排序
+   4）归并排序
+   5）基数排序
+
+### 7.3 算法的时间复杂度
+#### 7.3.1 度量一个程序（算法）执行时间的两种方法
+   1.事后统计法（需要在同样机器配置、同样环境下执行，计算时间）
+   2.事前估算法（时间复杂度）
+#### 7.3.2 时间频度
+   一个算法花费的时间与算法中语句的执行次数成正比，哪个算法中语句执行次数多，它花费的时间就多。**一个算法中语句执行次数被称为语句频度或时间频度。**记为T(n)
+   T(n) = 3n² + 7n + 6 
+   1）常数项可以忽略  6
+   2）低次项可以忽略  7n
+   3）系数可以忽略  3
+
+#### 7.3.3 时间复杂度
+   1.一般情况下，算法中的基本操作语句的重复执行次数是问题规模n的某个函数，用T(n)表示，若有某个辅助函数f(n)，使得当n趋近于无穷大时，T(n)/f(n)的极限值为不等于零的常数，则称f(n)是T(n)的同量级函数。记作T(n) = O(f(n))为算法的渐进时间复杂度，简称时间复杂度。
+   2.T(n)不同，但时间复杂度可能相同。如：T(n) = n² + 7n + 6 与 T(n)  = 3n² + 2n + 2它们的T(n)不同，但时间复杂度相同，都为O(n²)。
+##### 7.3.3.1 常见的时间复杂度
+   常见的时间复杂度
+   1.常数阶O(1)
+   2.对数阶O(log₂n)
+   3.线性阶O(n)
+   4.线性对数阶O(nlog₂n)
+   5.平方阶O(n²)
+   6.立方阶O(n³)
+   7.k次方阶O(nk)
+   8.指数阶(2ⁿ)
+
+##### 7.3.3.2 平均复杂度和最坏时间复杂度
+   1.平均时间复杂度是指所有可能得输入实例均以等概率出现的情况下，该算法的运行时间。
+   2.最坏情况下的时间复杂度称最坏时间复杂度。一般讨论的时间复杂度均是最坏情况下的时间复杂度。
+   3.平均时间复杂度和最坏时间复杂度是否一致，和算法有关
+### 7.4 算法的空间复杂度
+   1.一个算法的空间复杂度(Space Complexity)定义为该算法所耗费的存储空间，它也是问题规模n的函数。
+   2.空间复杂度是对一个算法在运行过程中临时占用存储空间大小的度量。有的算法需要占用的临时工作单元数与解决问题的规模n有关，它随着n的增大而增大，当n较大时，将占用较多的存储单元，例如快速排序和归并排序算法就属于这种情况。
+   3.在做算法分析时，主要讨论的就是时间复杂度。从用户使用体验上看，更看重的程序执行的速度。一些缓存产品其本质就是使用空间换时间。
+
+### 7.5 冒泡排序
+#### 7.5.1 基本介绍
+   冒泡排序（Bubble Sorting）的基本思想就是：通过对待排序序列从前向后（从下标较小的元素开始），依次比较相邻元素的值，若发现逆序则交换，使值较大的元素逐渐从前移向后部，就像水底下的气泡一样逐渐向上冒。
+   因为排序的过程中，各元素不断接近自己的位置，如果一趟比较下来没有进行过交换，就说明序列有序，因此要在排序过程中设置一个标志flag判断元素是否进行过交换。从而减少不必要的比较（优化）
+   小结：
+   1）一共进行 数组大小 -1次的大循环
+   2）每一趟排序的次数在逐渐的减小
+   3）如果发现在某趟排序中，没有发生过交换，可以提前结束排序
+
+#### 7.5.2 代码实现
+```java
+public class BubbleSrot{
+	public static void main(String[] args) {
+		// int[] arr = {3,9,-1,10,20};
+		int[] arr = new int[80000];
+		for(int i = 0; i < 80000; i++) {
+			arr[i] = (int)(Math.random()*8000000);//生成[0,8000000)随机数,区分
+		}
+		// todo 计算运算时间
+		System.out.println("排序前： " + arr);
+		bubbleSorted(arr);
+		System.out.println("排序后： " + arr);
+	}
+	
+	// 冒泡排序  从小到大
+	public static void bubbleSorted(int[] arr) {
+		int temp = 0;// 临时变量
+		boolean flag = false;// 标识是否进行过交换（优化）
+		for(int i = 0; i < arr.length - 1; i++) {
+			for(int j = 0; j < arr.length - 1 - i; j++) {
+				if(arr[j] > arr[j + 1]){
+					flag = true;
+					temp = arr[j];
+					arr[j] = arr[j + 1];
+					arr[j + 1] = temp;
+				}
+			}
+			if(flag){
+				flag = false;
+			} else {
+				break;
+			}
+		}
+	}
+}
+```
+
+### 7.6 选择排序
+#### 7.6.1 基本介绍
+   选择排序也属于内部排序法，是从欲排序的数据中，按指定的规则选出某一元素，再依规定交换位置后达到排序的目的。
+   排序思维：
+
+
+#### 7.6.2 代码实现
+```java
+public class SelectSort {
+	public static void main(String[] args) {
+		//  TODO 同上一样，8万数据测试新能
+	}
+	
+	// 选择排序，按照从小到大排序
+	public static void selectSort(int[] arr) {
+		for(int i = 0, i < arr.length - 1; i++) {
+			int minIndex = i;
+			int min = arr[i];
+			for(int j = i + 1; j < arr.length; j++) {
+				if(min > arr[j]){
+					minIndex = j;
+					min = arr[j];
+				}
+			}
+			if(minIndex != i){
+				arr[minIndex] = arr[i];
+				arr[i] = min;
+			}
+	}
+}
+```
+
+### 7.7 插入排序
+#### 7.7.1 基本介绍
+   插入排序属于内部排序法，是对于欲排序的元素以插入的方式找寻该元素适当的位置，以达到排序的目的。
+#### 7.7.2 插入排序思想
+   把n个待排序元素看成一个有序表和一个无序表，开始时有序表只有一个元素，无序表有n-1个元素。排序时每次从无序表中取出一个元素与有序表进行比较，将其插入到适当位置，使之成为一个新的有序表。
+#### 7.7.3 代码实现
+```java
+public class InsertSort{
+	public static void main(String[] args) {
+		// int[] arr = {101,34,119.1};
+		// 同上，测试8万条数据的性能
+	}
+	
+	// 插入排序 按照从小到大排序
+	public static void insertSort(int[] arr) {
+		// 使用for循环简化代码
+		for(int i = 1; i < arr.length; i++) {
+			// 定义待插入的数
+			int insertVal = arr[i];
+			// 即arr[i]的前面这个数的下标，需要跟这个下标的数进行比较
+			int insertIndex = i - 1;
+			// 给insertVal找到需要插入的位置
+			while(insertIndex >= 0 && insertVal < arr[insertIndex]) {
+				// 满足条件说明没找到位置，需要把前一个值往后移一下，并将insertIndex迁移
+				arr[insertIndex + 1] = arr[insertIndex];
+				insertIndex--;
+			}
+			// 当退出while循环时，说明已经找到要插入的位置，需要将insertIndex + 1
+			// 优化判断
+			if(insertIndex + 1 != i) {
+				arr[insertIndex + 1] = insertVal;			
+			}
+			System.out.println("第"+ i + "轮插入");
+			System.out.println(Arrays.toString(arr));
+		}
+	}
+}
+```
+
+### 7.8 希尔排序
+#### 7.8.1 简单插入排序存在的问题
+   当数组arr = {2,3,4,5,6,1} 这时需要插入的最小数为1，其他数的后移次数明显增多，对效率有影响
+
+#### 7.8.2 希尔排序法介绍
+   希尔排序也是一种插入排序，它是简单插入排序经过改进之后的一个更高效的版本，也成为缩小增量排序
+
+#### 7.8.3 基本思想
+   希尔排序是把记录按下标的一定增量分组，对每组使用直接插入排序算法排序；随着增量逐渐减少，每组包含的关键词越来越多，当增量减至1时，整个文件恰被分成一组，算法便终止。
+
+![](C:\Users\w_zhangmaoxin\Desktop\笔记\插图\Snipaste_2019-08-02_09-32-09.png)
+
+#### 7.8.4 代码实现
+   1.采用交换法
+   2.采用移动法
+
+```java
+public class ShellSort{
+	public static void main(Stringp[] args) {
+		int[] arr = {8,9,1,7,2,3,5,4,6,0};
+	}
+	
+	// 采用交换法  逐步推导
+	public static void shellSortByStep(int[] arr) {
+		// 第一轮时，是将10个数据分成5组  10/2 = 5
+		for(int i = 5; i < arr.length; i++){
+			// 遍历各组中的所有元素（共有5组，每组有2个元素），步长5
+			for(int j = i - 5; j >= 0; j -= 5) {
+				if(arr[j] > arr[j + 5]){
+					int temp = arr[j];
+					arr[j] = arr[j + 5];
+					arr[j + 5] = temp;
+				}
+			}
+		}
+		System.out.println("第1轮排序后 = " + Arrays.toString(arr))
+		
+		// 第二轮时，是将是个数据分成了2组  5/2 = 2
+		for(int i = 2; i < arr.length; i++){
+			// 共有2组，每组有5个元素，步长2
+			// i = 8时，j = 6  组内元素为0,2,4,6,8，每个都需要对比交换
+			for(int j = i - 2; j >= 0; j -= 2) {
+				if(arr[j] > arr[j + 2]){
+					int temp = arr[j];
+					arr[j] = arr[j + 2];
+					arr[j + 2] = temp;
+				}
+			}
+		}
+		System.out.println("第2轮排序后 = " + Arrays.toString(arr))
+		
+		// 第三轮时，是将是个数据分成了1组  2/2 = 1
+		for(int i = 1; i < arr.length; i++){
+			for(int j = i - 1; j >= 0; j -= 1) {
+				if(arr[j] > arr[j + 1]){
+					int temp = arr[j];
+					arr[j] = arr[j + 1];
+					arr[j + 1] = temp;
+				}
+			}
+		}
+		System.out.println("第3轮排序后 = " + Arrays.toString(arr))
+	}
+	
+	// 采用交换法
+	public static void shellSort(int[] arr) {
+		// 根据逐步推导，收集规律一次到位
+		for(int gap = arr.length / 2; i > 0; i /= 2){
+			for(int i = gap; i < arr.length; i++){
+				for(int j = i - gap; j >= 0; j -= gap) {
+					if(arr[j] > arr[j + gap]){
+						int temp = arr[j];
+						arr[j] = arr[j + gap];
+						arr[j + gap] = temp;
+					}
+				}
+			}
+		}
+		
+	}
+	
+	// 采用移动法
+	public static void shellSort1(int[] arr) {
+		
+	}
+}
+```
