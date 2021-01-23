@@ -611,3 +611,14 @@
 
 #### github之快捷键
 https://docs.github.com/en/free-pro-team@latest/github/getting-started-with-github/keyboard-shortcuts
+
+#### git常见问题
+- git for windows下的Filename too long
+    - 输入下面命令即可
+    - git config --global core.longpaths true
+- 切换分支，需要先进入到指定项目内
+    - git branch -a 查看所有分支
+    - git checkout -b [本地分支名] [远端分支名] 
+        - 例： git checkout -b dev remotes/origin/3.1.1.3.0.1.0-187     
+
+    
