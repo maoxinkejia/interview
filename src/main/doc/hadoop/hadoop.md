@@ -44,3 +44,33 @@
 - Map阶段并行处理输入数据
 - Reduce阶段对Map结果进行汇总
 
+### capacity-scheduler
+测试数据：
+队列资源分配：
+- root=100%
+- root.default=51%
+- root.租户=49%
+- root.租户.Q1=66.6%
+- root.租户.Q2=26.7%
+- root.租户.Q3=6.67%
+    - Q2.max=100%
+    - 此时Q2队列正常容量为49% * 26.7% = 13.1%，可用为整个集群的13.1%的资源
+    - 最大使用资源因为配置了100%，所以是可用租户49%的100%
+Q2.t1.capacity=75%
+Q2.t1.max=100%
+当前队列占用集群的总资源为49.8%
+
+
+当user.limit.percent=1时
+占用集群Absolute Used Capacity=10%
+当user.limit.percent=2时
+占用集群Absolute Used Capacity=20%
+当user.limit.percent=3时
+占用集群Absolute Used Capacity=30%
+当user.limit.percent=4时
+占用集群Absolute Used Capacity=39.7%
+
+
+user.limit.percent
+
+
