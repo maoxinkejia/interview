@@ -388,3 +388,14 @@ lsof|awk '{print $2}'|sort|uniq -c|sort -nr|more
 sort 排序
 uniq -c 聚合（排重，计数）
 sort -nrk 1： 聚合后得到频次，对频次进行排序 r表示倒叙 n表示按数值排序 k表示对第几列排序
+
+
+## Java设计模式原则
+详情参考： https://blog.csdn.net/u011288271/article/details/52497602
+### 单一职责原则
+### 开闭原则
+### 里氏代换原则
+### 依赖倒置原则
+### 接口隔离原则
+### 最少知道原则
+### 合成复用原则
