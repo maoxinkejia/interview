@@ -406,5 +406,7 @@ sort -nrk 1： 聚合后得到频次，对频次进行排序 r表示倒叙 n表�
 slapcat |grep user_name
 
 ## JVM相关
-- java进程启动时，若不显示指定内存大小，默认使用本机内存的1/4作为MaxHeapSize
+- java进程启动时，若不显示指定最大堆内存大小，默认使用本机物理内存的1/4作为MaxHeapSize
 - 查看java进程内存详情 jmap -heap pid
+- -XX:+HeapDumpOnOutOfMemoryError
+- jmap -dump:format=b,file=<filename.hprof> <pid>
